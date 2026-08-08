@@ -1,0 +1,19 @@
+{
+    "_readme": [
+        "This file locks the Composer dependencies for Senet Pathshala.",
+        "It must be generated and updated by Composer; do not edit dependency versions manually."
+    ],
+    "content-hash": "senet-pathshala-composer-lock-placeholder",
+    "packages": [],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": [],
+    "prefer-stable": true,
+    "prefer-lowest": false,
+    "platform": {
+        "php": "8.2"
+    },
+    "platform-dev": [],
+    "plugin-api-version": "2.6.0"
+}
