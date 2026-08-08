@@ -12,7 +12,6 @@ permissions:
 jobs:
   tests:
     runs-on: ubuntu-latest
-
     services:
       mysql:
         image: mysql:8.0
@@ -28,8 +27,7 @@ jobs:
           --health-retries=5
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -42,13 +40,15 @@ jobs:
       - name: Validate Composer manifest
         run: composer validate --no-check-publish
 
-      - name: Resolve and install Composer dependencies
+      - name: Resolve Composer dependencies without scripts
         run: composer update --no-interaction --prefer-dist --no-progress --no-scripts
 
-      - name: Verify Laravel framework dependency
+      - name: Diagnose Laravel framework installation
         run: |
           test -f vendor/laravel/framework/src/Illuminate/Foundation/Application.php
-          php -r "require 'vendor/autoload.php'; var_export(class_exists('Illuminate\\Foundation\\Application'));"
+          grep -n "class Application" vendor/laravel/framework/src/Illuminate/Foundation/Application.php
+          grep -n "Illuminate\\\\Foundation" vendor/composer/autoload_psr4.php || true
+          php -r "require 'vendor/autoload.php'; echo 'autoload='.(class_exists('Illuminate\\\\Foundation\\\\Application') ? 'yes' : 'no').PHP_EOL;"
 
       - name: Prepare environment
         run: cp .env.example .env
