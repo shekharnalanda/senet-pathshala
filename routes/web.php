@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\ContactController as AdminContactController;
 use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\NoticeController;
 use App\Http\Controllers\Admin\SchoolSettingController;
@@ -33,6 +34,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/gallery/{gallery}', [GalleryController::class, 'destroy'])->name('gallery.destroy');
         Route::get('/settings', [SchoolSettingController::class, 'edit'])->name('settings.edit');
         Route::put('/settings', [SchoolSettingController::class, 'update'])->name('settings.update');
+        Route::get('/contacts', [AdminContactController::class, 'index'])->name('contacts.index');
+        Route::delete('/contacts/{contact}', [AdminContactController::class, 'destroy'])->name('contacts.destroy');
     });
 });
 
