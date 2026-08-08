@@ -6,7 +6,7 @@ use App\Http\Controllers\Admin\NoticeController;
 use App\Http\Controllers\Admin\SchoolSettingController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () { return view('home'); })->name('home');
+Route::get('/', fn () => view('home'))->name('home');
 Route::view('/about', 'about')->name('about');
 Route::view('/admission', 'admission')->name('admission');
 Route::view('/gallery', 'gallery')->name('gallery');
@@ -18,8 +18,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
     });
 
-    Route::middleware('auth')->group(function () {
-        Route::get('/', function () { return view('admin.dashboard'); })->name('dashboard');
+    Route::middleware(['auth', 'admin'])->group(function () {
+        Route::view('/', 'admin.dashboard')->name('dashboard');
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
         Route::get('/notices', [NoticeController::class, 'index'])->name('notices.index');
         Route::post('/notices', [NoticeController::class, 'store'])->name('notices.store');
