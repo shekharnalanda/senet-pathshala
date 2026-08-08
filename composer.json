@@ -10,6 +10,8 @@
   "require-dev": {
     "fakerphp/faker": "^1.24",
     "laravel/pail": "^1.2",
+    "laravel/pint": "^1.24",
+    "nunomaduro/collision": "^8.6",
     "phpunit/phpunit": "^11.5"
   },
   "autoload": {
@@ -21,9 +23,24 @@
   },
   "scripts": {
     "post-autoload-dump": [
+      "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
       "@php artisan package:discover --ansi"
+    ],
+    "setup": [
+      "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
+      "@php artisan key:generate",
+      "@php artisan migrate --seed"
+    ],
+    "test": [
+      "@php artisan config:clear",
+      "@php artisan test"
     ]
   },
   "minimum-stability": "stable",
-  "prefer-stable": true
+  "prefer-stable": true,
+  "config": {
+    "optimize-autoloader": true,
+    "preferred-install": "dist",
+    "sort-packages": true
+  }
 }
