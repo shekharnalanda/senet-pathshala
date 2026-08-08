@@ -64,11 +64,12 @@ Before deployment:
 3. Configure a persistent MySQL database.
 4. Run `composer install --no-dev --optimize-autoloader`.
 5. Run `php artisan migrate --force`.
-6. Run `php artisan storage:link`.
-7. Run `php artisan config:cache`, `php artisan route:cache`, and `php artisan view:cache`.
-8. Point the web server document root to the Laravel `public/` directory.
-9. Ensure `storage/` and `bootstrap/cache/` are writable by the web-server user.
-10. Configure HTTPS and regular database/storage backups.
+6. Run `php artisan db:seed --force` when provisioning the initial admin account.
+7. Run `php artisan storage:link`.
+8. Run `php artisan config:cache`, `php artisan route:cache`, and `php artisan view:cache`.
+9. Point the web server document root to the Laravel `public/` directory.
+10. Ensure `storage/` and `bootstrap/cache/` are writable by the web-server user.
+11. Configure HTTPS and regular database/storage backups.
 
 ## Project roadmap
 
