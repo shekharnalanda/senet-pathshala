@@ -1,12 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Admin Dashboard | Senet Pathshala</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-<nav class="navbar navbar-dark bg-dark"><div class="container"><a class="navbar-brand fw-bold" href="{{ route('admin.dashboard') }}">Senet Pathshala Admin</a><div class="d-flex gap-2"><a class="btn btn-outline-light btn-sm" href="{{ route('home') }}">View Website</a><form method="POST" action="{{ route('admin.logout') }}">@csrf<button class="btn btn-light btn-sm">Logout</button></form></div></div></nav>
-<div class="container py-5">
+@extends('admin.layouts.app')
+@section('title', 'Dashboard')
+@section('heading', 'Dashboard')
+@section('content')
 <div class="mb-4"><h1 class="fw-bold">Dashboard</h1><p class="text-secondary mb-0">Website overview and quick management.</p></div>
 <div class="row g-4 mb-5">
 <div class="col-sm-6 col-lg-3"><a href="{{ route('admin.notices.index') }}" class="text-decoration-none"><div class="card border-0 shadow-sm h-100"><div class="card-body"><div class="d-flex justify-content-between"><span class="text-secondary">Notices</span><i class="fa-solid fa-bullhorn text-primary fs-4"></i></div><div class="display-6 fw-bold text-dark mt-2">{{ $noticeCount }}</div><small class="text-success">{{ $publishedNoticeCount }} published</small></div></div></a></div>
@@ -15,4 +10,4 @@
 <div class="col-sm-6 col-lg-3"><a href="{{ route('admin.settings.edit') }}" class="text-decoration-none"><div class="card border-0 shadow-sm h-100"><div class="card-body"><div class="d-flex justify-content-between"><span class="text-secondary">Settings</span><i class="fa-solid fa-gear text-primary fs-4"></i></div><div class="mt-3 fw-semibold text-dark">School Information</div><small class="text-secondary">Update website details</small></div></div></a></div>
 </div>
 <div class="card border-0 shadow-sm"><div class="card-body p-4"><div class="d-flex justify-content-between align-items-center mb-3"><h5 class="mb-0">Recent Enquiries</h5><a href="{{ route('admin.contacts.index') }}" class="btn btn-sm btn-outline-primary">View All</a></div><div class="table-responsive"><table class="table align-middle"><thead><tr><th>Name</th><th>Mobile</th><th>Email</th><th>Received</th></tr></thead><tbody>@forelse($recentContacts as $contact)<tr><td class="fw-semibold">{{ $contact->name }}</td><td>{{ $contact->mobile }}</td><td>{{ $contact->email ?: '—' }}</td><td>{{ $contact->created_at?->format('d M Y, h:i A') }}</td></tr>@empty<tr><td colspan="4" class="text-center text-secondary py-4">No enquiries received yet.</td></tr>@endforelse</tbody></table></div></div></div>
-</div></body></html>
+@endsection
