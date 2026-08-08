@@ -45,6 +45,11 @@ jobs:
       - name: Resolve and install Composer dependencies
         run: composer update --no-interaction --prefer-dist --no-progress --no-scripts
 
+      - name: Verify Laravel framework dependency
+        run: |
+          test -f vendor/laravel/framework/src/Illuminate/Foundation/Application.php
+          php -r "require 'vendor/autoload.php'; var_export(class_exists('Illuminate\\Foundation\\Application'));"
+
       - name: Prepare environment
         run: cp .env.example .env
 
