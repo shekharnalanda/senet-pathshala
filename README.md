@@ -81,3 +81,5 @@ Future modules can be added incrementally:
 - Examination and results
 
 > This repository is being developed incrementally. A module should be treated as production-ready only after its migrations, validation, authorization, tests and deployment requirements have been verified.
+
+<!-- CI trigger: verify latest Laravel bootstrap fixes. -->
