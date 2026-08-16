@@ -8,6 +8,8 @@ use App\Http\Controllers\Admin\NoticeController;
 use App\Http\Controllers\Admin\SchoolSettingController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\Student\AuthController as StudentAuthController;
+use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -16,6 +18,18 @@ Route::view('/admission', 'admission')->name('admission');
 Route::view('/gallery', 'gallery')->name('gallery');
 Route::view('/contact', 'contact')->name('contact');
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
+
+Route::prefix('student')->name('student.')->group(function () {
+    Route::middleware('guest')->group(function () {
+        Route::get('/login', [StudentAuthController::class, 'showLogin'])->name('login');
+        Route::post('/login', [StudentAuthController::class, 'login'])->name('login.submit');
+    });
+
+    Route::middleware('auth')->group(function () {
+        Route::get('/', [StudentDashboardController::class, 'index'])->name('dashboard');
+        Route::post('/logout', [StudentAuthController::class, 'logout'])->name('logout');
+    });
+});
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware('guest')->group(function () {
