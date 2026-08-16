@@ -3,7 +3,7 @@
     <div class="container">
         <div class="row g-4">
             <div class="col-lg-4">
-                <h4 class="fw-bold">Senet Pathshala</h4>
+                <h4 class="fw-bold">C-Net Pathshala</h4>
                 <p class="mb-3">A caring and activity-based learning environment for Play Group, Nursery, LKG and UKG.</p>
                 <p class="mb-1"><i class="fa-solid fa-phone me-2"></i>+91 7004773247</p>
                 <p><i class="fa-solid fa-envelope me-2"></i>cnetbiharsharif@gmail.com</p>
@@ -29,8 +29,8 @@
         </div>
         <hr class="border-secondary my-4">
         <div class="d-flex flex-wrap justify-content-between gap-2 small">
-            <span>&copy; {{ date('Y') }} Senet Pathshala. All Rights Reserved.</span>
-            <span>Senet Pathshala School Management System</span>
+            <span>&copy; {{ date('Y') }} C-Net Pathshala. All Rights Reserved.</span>
+            <span>C-Net Pathshala School Management System</span>
         </div>
     </div>
 </footer>
