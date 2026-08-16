@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Senet Pathshala')</title>
-    <meta name="description" content="Senet Pathshala - Quality early childhood education.">
+    <title>@yield('title', 'C-Net Pathshala')</title>
+    <meta name="description" content="C-Net Pathshala - Quality early childhood education.">
     <link rel="icon" href="{{ asset('images/favicon.png') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet">
@@ -21,8 +21,8 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
     <div class="container">
         <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url('/') }}">
-            <img src="{{ asset('images/logo.png') }}" width="54" height="54" alt="Senet Pathshala logo">
-            <span class="fw-bold">Senet Pathshala</span>
+            <img src="{{ asset('images/logo.png') }}" width="54" height="54" alt="C-Net Pathshala logo">
+            <span class="fw-bold">C-Net Pathshala</span>
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
