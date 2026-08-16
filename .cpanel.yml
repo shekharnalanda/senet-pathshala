@@ -1,7 +1,7 @@
 ---
 deployment:
   tasks:
-    - export APPPATH=/home4/mcied45x/repositories/senet-pathshala
+    - export APPPATH=/home4/mcied45x/repositories/senet-pathshala-new
     - cd $APPPATH && /opt/cpanel/ea-php83/root/usr/bin/php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
     - cd $APPPATH && /opt/cpanel/ea-php83/root/usr/bin/php composer-setup.php --install-dir=$APPPATH --filename=composer.phar
     - cd $APPPATH && /opt/cpanel/ea-php83/root/usr/bin/php composer.phar install --no-dev --optimize-autoloader --no-interaction
