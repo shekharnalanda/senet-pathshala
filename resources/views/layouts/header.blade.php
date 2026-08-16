@@ -34,7 +34,8 @@
                 <li class="nav-item"><a class="nav-link" href="{{ url('/admission') }}">Admission</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ url('/gallery') }}">Gallery</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ url('/contact') }}">Contact</a></li>
-                <li class="nav-item ms-lg-3"><a class="btn btn-primary rounded-pill px-4" href="{{ url('/login') }}">Login</a></li>
+                <li class="nav-item ms-lg-3"><a class="btn btn-primary rounded-pill px-3" href="{{ route('student.login') }}">Student Login</a></li>
+                <li class="nav-item ms-lg-2"><a class="btn btn-outline-secondary rounded-pill px-3" href="{{ route('admin.login') }}">Admin</a></li>
             </ul>
         </div>
     </div>
