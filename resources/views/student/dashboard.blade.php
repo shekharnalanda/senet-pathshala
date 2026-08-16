@@ -1,0 +1,62 @@
+@extends('layouts.app')
+
+@section('title', 'Student Dashboard')
+
+@section('content')
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <div>
+                <h1 class="h3 fw-bold mb-1">Welcome, {{ auth()->user()->name }}</h1>
+                <p class="text-secondary mb-0">Student Dashboard · C-Net Pathshala</p>
+            </div>
+            <form method="POST" action="{{ route('student.logout') }}">
+                @csrf
+                <button type="submit" class="btn btn-outline-danger">Logout</button>
+            </form>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100"><div class="card-body">
+                    <div class="text-secondary small">Admission No.</div>
+                    <div class="fs-5 fw-semibold">{{ $student->admission_no }}</div>
+                </div></div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100"><div class="card-body">
+                    <div class="text-secondary small">Class / Section</div>
+                    <div class="fs-5 fw-semibold">{{ $student->class_name ?: '—' }} {{ $student->section ? '/ '.$student->section : '' }}</div>
+                </div></div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100"><div class="card-body">
+                    <div class="text-secondary small">Roll No.</div>
+                    <div class="fs-5 fw-semibold">{{ $student->roll_no ?: '—' }}</div>
+                </div></div>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            @foreach ([
+                ['Profile', 'Personal and guardian details'],
+                ['Digital ID Card', 'QR-enabled student identity card'],
+                ['Attendance', 'Daily and monthly attendance'],
+                ['Homework', 'Assignments and homework'],
+                ['Results', 'Exam marks and report cards'],
+                ['Fee Status', 'Paid and pending fees'],
+                ['Certificates', 'Available certificates and documents'],
+            ] as [$title, $text])
+                <div class="col-md-6 col-lg-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <h5 class="fw-bold">{{ $title }}</h5>
+                            <p class="text-secondary mb-0">{{ $text }}</p>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+</section>
+@endsection
