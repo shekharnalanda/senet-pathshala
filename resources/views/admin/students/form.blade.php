@@ -1,0 +1,21 @@
+@extends('admin.layouts.app')
+@section('title',$student->exists?'Edit Student':'Add Student')
+@section('heading','Students')
+@section('content')
+@php($editing=$student->exists)
+<div class="mb-4"><h1 class="fw-bold">{{ $editing ? 'Edit Student' : 'Add Student' }}</h1><p class="text-secondary mb-0">Student details, portal login and ID card photo.</p></div>
+@if($errors->any())<div class="alert alert-danger"><ul class="mb-0">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
+<form method="POST" enctype="multipart/form-data" action="{{ $editing ? route('admin.students.update',$student) : route('admin.students.store') }}">@csrf @if($editing) @method('PUT') @endif
+<div class="card border-0 shadow-sm"><div class="card-body p-4"><div class="row g-3">
+<div class="col-md-6"><label class="form-label">Student Name *</label><input class="form-control" name="name" value="{{ old('name',$editing?$student->user->name:'') }}" required></div>
+<div class="col-md-6"><label class="form-label">Login Email *</label><input type="email" class="form-control" name="email" value="{{ old('email',$editing?$student->user->email:'') }}" required></div>
+<div class="col-md-6"><label class="form-label">{{ $editing ? 'New Password (leave blank to keep current)' : 'Login Password *' }}</label><input type="password" class="form-control" name="password" {{ $editing?'':'required' }}></div>
+<div class="col-md-6"><label class="form-label">Admission No. *</label><input class="form-control" name="admission_no" value="{{ old('admission_no',$student->admission_no) }}" required></div>
+<div class="col-md-4"><label class="form-label">Class</label><input class="form-control" name="class_name" value="{{ old('class_name',$student->class_name) }}"></div><div class="col-md-4"><label class="form-label">Section</label><input class="form-control" name="section" value="{{ old('section',$student->section) }}"></div><div class="col-md-4"><label class="form-label">Roll No.</label><input class="form-control" name="roll_no" value="{{ old('roll_no',$student->roll_no) }}"></div>
+<div class="col-md-4"><label class="form-label">Date of Birth</label><input type="date" class="form-control" name="date_of_birth" value="{{ old('date_of_birth',$student->date_of_birth?->format('Y-m-d')) }}"></div><div class="col-md-4"><label class="form-label">Gender</label><select class="form-select" name="gender"><option value="">Select</option>@foreach(['Male','Female','Other'] as $g)<option value="{{ $g }}" @selected(old('gender',$student->gender)===$g)>{{ $g }}</option>@endforeach</select></div><div class="col-md-4"><label class="form-label">Guardian Phone</label><input class="form-control" name="guardian_phone" value="{{ old('guardian_phone',$student->guardian_phone) }}"></div>
+<div class="col-md-6"><label class="form-label">Guardian Name</label><input class="form-control" name="guardian_name" value="{{ old('guardian_name',$student->guardian_name) }}"></div><div class="col-md-6"><label class="form-label">Student Photo</label><input type="file" class="form-control" name="photo" accept="image/jpeg,image/png,image/webp"><div class="form-text">JPG, PNG or WebP; maximum 2 MB. Portrait photo works best.</div></div>
+<div class="col-12"><label class="form-label">Address</label><textarea class="form-control" rows="3" name="address">{{ old('address',$student->address) }}</textarea></div>
+@if($editing && $student->photo)<div class="col-12"><label class="form-label d-block">Current Photo</label><img src="{{ asset('storage/'.$student->photo) }}" width="100" height="120" class="rounded border" style="object-fit:cover"></div>@endif
+<div class="col-12"><div class="form-check"><input type="hidden" name="is_active" value="0"><input class="form-check-input" type="checkbox" name="is_active" value="1" id="active" @checked(old('is_active',$student->exists?$student->is_active:true))><label class="form-check-label" for="active">Active student account</label></div></div>
+</div><div class="mt-4 d-flex gap-2"><button class="btn btn-primary" type="submit">{{ $editing ? 'Save Changes' : 'Add Student' }}</button><a href="{{ route('admin.students.index') }}" class="btn btn-outline-secondary">Cancel</a></div></div></div></form>
+@endsection
