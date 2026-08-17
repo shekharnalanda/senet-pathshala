@@ -4,14 +4,15 @@ use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Models\Homework;
 use App\Models\ExamResult;
+use App\Models\SchoolSetting;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-class DashboardController
-extends Controller {
+class DashboardController extends Controller {
 public function index(Request $request): View {$student=$request->user()->student;abort_unless($student&&$student->is_active,403);return view('student.dashboard',compact('student'));}
 public function profile(Request $request): View {$student=$request->user()->student;abort_unless($student&&$student->is_active,403);$student->load('user');return view('student.profile',compact('student'));}
 public function idCard(Request $request): View {$student=$request->user()->student;abort_unless($student&&$student->is_active,403);$student->load('user');return view('student.id-card',compact('student'));}
 public function attendance(Request $request): View {$student=$request->user()->student;abort_unless($student&&$student->is_active,403);$records=Attendance::where('student_id',$student->id)->latest('attendance_date')->get();$present=$records->where('status','Present')->count();$absent=$records->where('status','Absent')->count();$leave=$records->where('status','Leave')->count();$workingDays=$present+$absent;$percentage=$workingDays>0?round(($present/$workingDays)*100,1):0;return view('student.attendance',compact('student','records','present','absent','leave','percentage'));}
 public function homework(Request $request): View {$student=$request->user()->student;abort_unless($student&&$student->is_active,403);$homeworks=Homework::where('class_name',$student->class_name)->where(function($q)use($student){$q->whereNull('section')->orWhere('section','')->orWhere('section',$student->section);})->latest('homework_date')->latest('id')->get();return view('student.homework',compact('student','homeworks'));}
 public function results(Request $request): View {$student=$request->user()->student;abort_unless($student&&$student->is_active,403);$results=ExamResult::where('student_id',$student->id)->orderBy('exam_name')->orderBy('subject')->get();$exams=$results->groupBy('exam_name');return view('student.results',compact('student','exams'));}
+public function reportCard(Request $request, string $exam): View {$student=$request->user()->student;abort_unless($student&&$student->is_active,403);$student->load('user');$results=ExamResult::where('student_id',$student->id)->where('exam_name',$exam)->orderBy('subject')->get();abort_if($results->isEmpty(),404);$total=(float)$results->sum(fn($r)=>(float)$r->max_marks);$obtained=(float)$results->sum(fn($r)=>(float)$r->marks_obtained);$percentage=$total>0?round(($obtained/$total)*100,1):0;$grade=$percentage>=90?'A+':($percentage>=80?'A':($percentage>=70?'B+':($percentage>=60?'B':($percentage>=50?'C':($percentage>=40?'D':'F')))));$result=$percentage>=40?'PASS':'FAIL';$school=SchoolSetting::first();return view('student.report-card',compact('student','results','exam','total','obtained','percentage','grade','result','school'));}
 }
