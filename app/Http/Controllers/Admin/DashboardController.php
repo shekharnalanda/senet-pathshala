@@ -13,11 +13,24 @@ use App\Models\Notice;
 use App\Models\Student;
 use App\Models\StudentDocument;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(): \Illuminate\View\View|RedirectResponse
     {
+        $user = request()->user();
+
+        if ($user && ! $user->is_admin) {
+            if ($user->hasPermission('fees')) return redirect()->route('admin.fees.index');
+            if ($user->hasPermission('certificates')) return redirect()->route('admin.documents.index');
+            if ($user->hasPermission('report_cards') || $user->hasPermission('results')) return redirect()->route('admin.results.index');
+            if ($user->hasPermission('attendance')) return redirect()->route('admin.attendance.index');
+            if ($user->hasPermission('homework')) return redirect()->route('admin.homework.index');
+            if ($user->hasPermission('students')) return redirect()->route('admin.students.index');
+            abort(403, 'No management permissions have been assigned to this account.');
+        }
+
         $today = Carbon::today();
         $todayAttendance = Attendance::whereDate('attendance_date', $today)->get();
         $todayPresent = $todayAttendance->where('status', 'Present')->count();
