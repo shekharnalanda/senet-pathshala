@@ -11,24 +11,11 @@ class Student extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
-        'admission_no',
-        'class_name',
-        'section',
-        'roll_no',
-        'date_of_birth',
-        'gender',
-        'guardian_name',
-        'guardian_phone',
-        'address',
-        'photo',
-        'is_active',
+        'user_id','admission_no','class_name','section','roll_no','date_of_birth','gender',
+        'father_name','mother_name','guardian_name','guardian_phone','address','photo','is_active',
     ];
 
-    protected $casts = [
-        'date_of_birth' => 'date',
-        'is_active' => 'boolean',
-    ];
+    protected $casts = ['date_of_birth'=>'date','is_active'=>'boolean'];
 
     public function user(): BelongsTo
     {
