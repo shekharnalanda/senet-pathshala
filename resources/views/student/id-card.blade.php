@@ -3,9 +3,42 @@
 @section('title', 'Digital ID Card')
 
 @section('content')
+<style>
+    @media print {
+        body * {
+            visibility: hidden !important;
+        }
+
+        #printable-id-card,
+        #printable-id-card * {
+            visibility: visible !important;
+        }
+
+        #printable-id-card {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            max-width: none !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            border: 1px solid #ddd !important;
+        }
+
+        .no-print {
+            display: none !important;
+        }
+
+        @page {
+            size: A4;
+            margin: 15mm;
+        }
+    }
+</style>
+
 <section class="py-5 bg-light">
     <div class="container">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 no-print">
             <div>
                 <h1 class="h3 fw-bold mb-1">Digital ID Card</h1>
                 <p class="text-secondary mb-0">C-Net Pathshala</p>
@@ -13,7 +46,7 @@
             <a href="{{ route('student.dashboard') }}" class="btn btn-outline-primary">Back to Dashboard</a>
         </div>
 
-        <div class="card border-0 shadow mx-auto" style="max-width: 720px;">
+        <div id="printable-id-card" class="card border-0 shadow mx-auto" style="max-width: 720px;">
             <div class="card-header bg-primary text-white text-center py-3">
                 <h2 class="h4 fw-bold mb-0">C-Net Pathshala</h2>
                 <div class="small">STUDENT IDENTITY CARD</div>
@@ -45,7 +78,7 @@
             </div>
         </div>
 
-        <div class="text-center mt-4">
+        <div class="text-center mt-4 no-print">
             <button type="button" class="btn btn-primary" onclick="window.print()">Print ID Card</button>
         </div>
     </div>
