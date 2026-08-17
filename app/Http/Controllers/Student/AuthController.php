@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\Student;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -27,9 +28,14 @@ class AuthController extends Controller
         }
 
         $request->session()->regenerate();
-        $user = $request->user()->load('student');
+        $user = $request->user();
 
-        if (! $user->student || ! $user->student->is_active) {
+        $student = Student::query()
+            ->where('user_id', $user->id)
+            ->where('is_active', true)
+            ->first();
+
+        if (! $student) {
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
