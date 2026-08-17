@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\ContactController as AdminContactController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\FeeController;
 use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\NoticeController;
 use App\Http\Controllers\Admin\SchoolSettingController;
@@ -49,6 +50,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/students/{student}/edit', [StudentController::class, 'edit'])->name('students.edit');
         Route::put('/students/{student}', [StudentController::class, 'update'])->name('students.update');
         Route::patch('/students/{student}/status', [StudentController::class, 'toggleStatus'])->name('students.status');
+        Route::get('/fees', [FeeController::class, 'index'])->name('fees.index');
+        Route::post('/fees', [FeeController::class, 'store'])->name('fees.store');
         Route::get('/student-id-cards', [StudentIdCardController::class, 'index'])->name('student-id-cards.index');
         Route::post('/student-id-cards/print', [StudentIdCardController::class, 'print'])->name('student-id-cards.print');
         Route::get('/notices', [NoticeController::class, 'index'])->name('notices.index');
