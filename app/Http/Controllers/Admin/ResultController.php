@@ -18,100 +18,64 @@ class ResultController extends Controller
         $results = ExamResult::with('student.user')->latest('exam_date')->latest('id')->get();
         $examNames = ExamResult::query()->select('exam_name')->distinct()->orderBy('exam_name')->pluck('exam_name');
         $classNames = Student::query()->whereNotNull('class_name')->where('class_name','!=','')->distinct()->orderBy('class_name')->pluck('class_name');
-        return view('admin.results.index', compact('students', 'results', 'examNames', 'classNames'));
+        $sectionNames = Student::query()->whereNotNull('section')->where('section','!=','')->distinct()->orderBy('section')->pluck('section');
+        return view('admin.results.index', compact('students','results','examNames','classNames','sectionNames'));
     }
 
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validatedResult($request);
-        if ((float)$data['marks_obtained'] > (float)$data['max_marks']) {
-            return back()->withErrors(['marks_obtained'=>'Marks obtained cannot be greater than maximum marks.'])->withInput();
-        }
-        ExamResult::updateOrCreate(
-            ['student_id'=>$data['student_id'],'exam_name'=>$data['exam_name'],'subject'=>$data['subject']],
-            ['max_marks'=>$data['max_marks'],'marks_obtained'=>$data['marks_obtained'],'exam_date'=>$data['exam_date']??null,'remark'=>$data['remark']??null]
-        );
+        if ((float)$data['marks_obtained'] > (float)$data['max_marks']) return back()->withErrors(['marks_obtained'=>'Marks obtained cannot be greater than maximum marks.'])->withInput();
+        ExamResult::updateOrCreate(['student_id'=>$data['student_id'],'exam_name'=>$data['exam_name'],'subject'=>$data['subject']],['max_marks'=>$data['max_marks'],'marks_obtained'=>$data['marks_obtained'],'exam_date'=>$data['exam_date']??null,'remark'=>$data['remark']??null]);
         return back()->with('success','Result saved successfully.');
     }
 
-    public function edit(ExamResult $result): View
-    {
-        $result->load('student.user');
-        return view('admin.results.edit', compact('result'));
-    }
+    public function edit(ExamResult $result): View {$result->load('student.user');return view('admin.results.edit',compact('result'));}
 
     public function update(Request $request, ExamResult $result): RedirectResponse
     {
-        $data = $request->validate([
-            'exam_name'=>['required','string','max:150'],
-            'subject'=>['required','string','max:150'],
-            'max_marks'=>['required','numeric','min:0.01'],
-            'marks_obtained'=>['required','numeric','min:0'],
-            'exam_date'=>['nullable','date'],
-            'remark'=>['nullable','string','max:255'],
-        ]);
-        if ((float)$data['marks_obtained'] > (float)$data['max_marks']) {
-            return back()->withErrors(['marks_obtained'=>'Marks obtained cannot be greater than maximum marks.'])->withInput();
-        }
-        $result->update($data);
-        return redirect()->route('admin.results.index')->with('success','Result updated successfully.');
+        $data=$request->validate(['exam_name'=>['required','string','max:150'],'subject'=>['required','string','max:150'],'max_marks'=>['required','numeric','min:0.01'],'marks_obtained'=>['required','numeric','min:0'],'exam_date'=>['nullable','date'],'remark'=>['nullable','string','max:255']]);
+        if((float)$data['marks_obtained']>(float)$data['max_marks']) return back()->withErrors(['marks_obtained'=>'Marks obtained cannot be greater than maximum marks.'])->withInput();
+        $result->update($data);return redirect()->route('admin.results.index')->with('success','Result updated successfully.');
     }
 
-    public function reportCard(Student $student, string $exam): View
+    public function reportCard(Student $student,string $exam): View
     {
-        $student->load('user');
-        $results = ExamResult::where('student_id',$student->id)->where('exam_name',$exam)->orderBy('subject')->get();
-        abort_if($results->isEmpty(),404);
-        $summary = $this->summary($results);
-        $school = SchoolSetting::first();
-        return view('admin.results.report-card', compact('student','results','exam','school','summary'));
+        $student->load('user');$results=ExamResult::where('student_id',$student->id)->where('exam_name',$exam)->orderBy('subject')->get();abort_if($results->isEmpty(),404);$summary=$this->summary($results);$school=SchoolSetting::first();return view('admin.results.report-card',compact('student','results','exam','school','summary'));
     }
 
     public function bulkReportCards(Request $request): View
     {
-        $data = $request->validate([
-            'exam'=>['required','string','max:150'],
-            'class_name'=>['nullable','string','max:100'],
-        ]);
-        $studentIds = ExamResult::where('exam_name',$data['exam'])->distinct()->pluck('student_id');
-        $students = Student::with('user')->whereIn('id',$studentIds)
-            ->when(!empty($data['class_name']),fn($q)=>$q->where('class_name',$data['class_name']))
-            ->orderBy('class_name')->orderBy('section')->orderBy('roll_no')->get();
-        $cards = $students->map(function($student) use($data){
-            $rows = ExamResult::where('student_id',$student->id)->where('exam_name',$data['exam'])->orderBy('subject')->get();
-            return ['student'=>$student,'results'=>$rows,'summary'=>$this->summary($rows)];
-        });
-        abort_if($cards->isEmpty(),404,'No report cards found for the selected filters.');
-        $school = SchoolSetting::first();
-        $exam = $data['exam'];
-        return view('admin.results.bulk-report-cards',compact('cards','school','exam'));
+        $data=$request->validate(['exam'=>['required','string','max:150'],'class_name'=>['nullable','string','max:100']]);$studentIds=ExamResult::where('exam_name',$data['exam'])->distinct()->pluck('student_id');$students=Student::with('user')->whereIn('id',$studentIds)->when(!empty($data['class_name']),fn($q)=>$q->where('class_name',$data['class_name']))->orderBy('class_name')->orderBy('section')->orderBy('roll_no')->get();$cards=$students->map(function($student)use($data){$rows=ExamResult::where('student_id',$student->id)->where('exam_name',$data['exam'])->orderBy('subject')->get();return ['student'=>$student,'results'=>$rows,'summary'=>$this->summary($rows)];});abort_if($cards->isEmpty(),404,'No report cards found for the selected filters.');$school=SchoolSetting::first();$exam=$data['exam'];return view('admin.results.bulk-report-cards',compact('cards','school','exam'));
     }
 
-    public function destroy(ExamResult $result): RedirectResponse
+    public function classReport(Request $request): View
     {
-        $result->delete();
-        return back()->with('success','Result deleted successfully.');
+        $data=$this->validatedClassReport($request);$report=$this->buildClassReport($data);return view('admin.results.class-report',$report);
     }
 
-    private function validatedResult(Request $request): array
+    public function classReportExcel(Request $request)
     {
-        return $request->validate([
-            'student_id'=>['required','exists:students,id'],
-            'exam_name'=>['required','string','max:150'],
-            'subject'=>['required','string','max:150'],
-            'max_marks'=>['required','numeric','min:0.01'],
-            'marks_obtained'=>['required','numeric','min:0'],
-            'exam_date'=>['nullable','date'],
-            'remark'=>['nullable','string','max:255'],
-        ]);
+        $data=$this->validatedClassReport($request);$report=$this->buildClassReport($data);$safeClass=preg_replace('/[^A-Za-z0-9_-]+/','_',$data['class_name']);$safeExam=preg_replace('/[^A-Za-z0-9_-]+/','_',$data['exam']);$filename="class_result_{$safeClass}_{$safeExam}.xls";return response(view('admin.results.class-report-excel',$report)->render(),200,['Content-Type'=>'application/vnd.ms-excel; charset=UTF-8','Content-Disposition'=>'attachment; filename="'.$filename.'"','Cache-Control'=>'max-age=0']);
+    }
+
+    public function destroy(ExamResult $result): RedirectResponse {$result->delete();return back()->with('success','Result deleted successfully.');}
+
+    private function validatedResult(Request $request): array {return $request->validate(['student_id'=>['required','exists:students,id'],'exam_name'=>['required','string','max:150'],'subject'=>['required','string','max:150'],'max_marks'=>['required','numeric','min:0.01'],'marks_obtained'=>['required','numeric','min:0'],'exam_date'=>['nullable','date'],'remark'=>['nullable','string','max:255']]);}
+
+    private function validatedClassReport(Request $request): array
+    {
+        return $request->validate(['exam'=>['required','string','max:150'],'class_name'=>['required','string','max:100'],'section'=>['nullable','string','max:50']]);
+    }
+
+    private function buildClassReport(array $data): array
+    {
+        $students=Student::with('user')->where('class_name',$data['class_name'])->when(!empty($data['section']),fn($q)=>$q->where('section',$data['section']))->whereHas('user')->orderBy('section')->orderByRaw("CASE WHEN roll_no REGEXP '^[0-9]+$' THEN CAST(roll_no AS UNSIGNED) ELSE 999999 END")->orderBy('roll_no')->get();
+        $studentIds=$students->pluck('id');$allResults=ExamResult::whereIn('student_id',$studentIds)->where('exam_name',$data['exam'])->orderBy('subject')->get();$subjects=$allResults->pluck('subject')->unique()->sort()->values();$rows=$students->map(function($student)use($allResults,$subjects){$results=$allResults->where('student_id',$student->id)->values();if($results->isEmpty())return null;$bySubject=$results->keyBy('subject');$summary=$this->summary($results);return ['student'=>$student,'results'=>$bySubject,'summary'=>$summary];})->filter()->values();abort_if($rows->isEmpty(),404,'No classwise result found for the selected filters.');$school=SchoolSetting::first();return ['rows'=>$rows,'subjects'=>$subjects,'school'=>$school,'exam'=>$data['exam'],'className'=>$data['class_name'],'section'=>$data['section']??null];
     }
 
     private function summary($results): array
     {
-        $total=(float)$results->sum(fn($r)=>(float)$r->max_marks);
-        $obtained=(float)$results->sum(fn($r)=>(float)$r->marks_obtained);
-        $percentage=$total>0?round(($obtained/$total)*100,1):0;
-        $grade=$percentage>=90?'A+':($percentage>=80?'A':($percentage>=70?'B+':($percentage>=60?'B':($percentage>=50?'C':($percentage>=40?'D':'F')))));
-        return ['total'=>$total,'obtained'=>$obtained,'percentage'=>$percentage,'grade'=>$grade,'result'=>$percentage>=40?'PASS':'FAIL'];
+        $total=(float)$results->sum(fn($r)=>(float)$r->max_marks);$obtained=(float)$results->sum(fn($r)=>(float)$r->marks_obtained);$percentage=$total>0?round(($obtained/$total)*100,1):0;$grade=$percentage>=90?'A+':($percentage>=80?'A':($percentage>=70?'B+':($percentage>=60?'B':($percentage>=50?'C':($percentage>=40?'D':'F')))));return ['total'=>$total,'obtained'=>$obtained,'percentage'=>$percentage,'grade'=>$grade,'result'=>$percentage>=40?'PASS':'FAIL'];
     }
 }
