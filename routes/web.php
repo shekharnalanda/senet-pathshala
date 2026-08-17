@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\NoticeController;
 use App\Http\Controllers\Admin\SchoolSettingController;
+use App\Http\Controllers\Admin\StudentIdCardController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Student\AuthController as StudentAuthController;
@@ -53,6 +54,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/settings', [SchoolSettingController::class, 'update'])->name('settings.update');
         Route::get('/contacts', [AdminContactController::class, 'index'])->name('contacts.index');
         Route::delete('/contacts/{contact}', [AdminContactController::class, 'destroy'])->name('contacts.destroy');
+        Route::get('/student-id-cards', [StudentIdCardController::class, 'index'])->name('student-id-cards.index');
+        Route::post('/student-id-cards/print', [StudentIdCardController::class, 'print'])->name('student-id-cards.print');
     });
 });
 
