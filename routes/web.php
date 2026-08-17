@@ -32,6 +32,7 @@ Route::prefix('student')->name('student.')->group(function () {
         Route::get('/', [StudentDashboardController::class, 'index'])->name('dashboard');
         Route::get('/profile', [StudentDashboardController::class, 'profile'])->name('profile');
         Route::get('/id-card', [StudentDashboardController::class, 'idCard'])->name('id-card');
+        Route::get('/attendance', [StudentDashboardController::class, 'attendance'])->name('attendance');
         Route::post('/logout', [StudentAuthController::class, 'logout'])->name('logout');
     });
 });
