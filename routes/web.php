@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\ContactController as AdminContactController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -50,6 +51,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/students/{student}/edit', [StudentController::class, 'edit'])->name('students.edit');
         Route::put('/students/{student}', [StudentController::class, 'update'])->name('students.update');
         Route::patch('/students/{student}/status', [StudentController::class, 'toggleStatus'])->name('students.status');
+        Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+        Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
         Route::get('/fees', [FeeController::class, 'index'])->name('fees.index');
         Route::post('/fees', [FeeController::class, 'store'])->name('fees.store');
         Route::get('/fees/{payment}/receipt', [FeeController::class, 'receipt'])->name('fees.receipt');
