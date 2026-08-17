@@ -21,6 +21,12 @@ class StudentController extends Controller
         return view('admin.students.index', compact('students'));
     }
 
+    public function show(Student $student): View
+    {
+        $student->load('user');
+        return view('admin.students.show', compact('student'));
+    }
+
     public function create(): View
     {
         return view('admin.students.form', ['student' => new Student()]);
