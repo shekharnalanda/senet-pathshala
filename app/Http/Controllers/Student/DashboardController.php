@@ -6,6 +6,7 @@ use App\Models\Homework;
 use App\Models\ExamResult;
 use App\Models\FeePayment;
 use App\Models\SchoolSetting;
+use App\Models\StudentDocument;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 class DashboardController extends Controller {
@@ -18,4 +19,5 @@ public function results(Request $request): View {$student=$request->user()->stud
 public function reportCard(Request $request,string $exam): View {$student=$request->user()->student;abort_unless($student&&$student->is_active,403);$student->load('user');$results=ExamResult::where('student_id',$student->id)->where('exam_name',$exam)->orderBy('subject')->get();abort_if($results->isEmpty(),404);$total=(float)$results->sum(fn($r)=>(float)$r->max_marks);$obtained=(float)$results->sum(fn($r)=>(float)$r->marks_obtained);$percentage=$total>0?round(($obtained/$total)*100,1):0;$grade=$percentage>=90?'A+':($percentage>=80?'A':($percentage>=70?'B+':($percentage>=60?'B':($percentage>=50?'C':($percentage>=40?'D':'F')))));$result=$percentage>=40?'PASS':'FAIL';$school=SchoolSetting::first();return view('student.report-card',compact('student','results','exam','total','obtained','percentage','grade','result','school'));}
 public function fees(Request $request): View {$student=$request->user()->student;abort_unless($student&&$student->is_active,403);$payments=FeePayment::where('student_id',$student->id)->latest('payment_date')->latest('id')->get();$totalFee=$payments->isNotEmpty()?(float)$payments->first()->total_fee:0;$totalPaid=(float)$payments->sum(fn($p)=>(float)$p->amount_paid);$pending=max(0,$totalFee-$totalPaid);return view('student.fees',compact('student','payments','totalFee','totalPaid','pending'));}
 public function feeReceipt(Request $request,FeePayment $payment): View {$student=$request->user()->student;abort_unless($student&&$student->is_active,403);abort_unless((int)$payment->student_id===(int)$student->id,403);$payment->load('student.user');$settings=SchoolSetting::first();$paidTillNow=(float)FeePayment::where('student_id',$student->id)->where(function($q)use($payment){$q->where('payment_date','<',$payment->payment_date)->orWhere(function($q)use($payment){$q->where('payment_date',$payment->payment_date)->where('id','<=',$payment->id);});})->sum('amount_paid');$pending=max(0,(float)$payment->total_fee-$paidTillNow);return view('student.fee-receipt',compact('payment','settings','paidTillNow','pending'));}
+public function documents(Request $request): View {$student=$request->user()->student;abort_unless($student&&$student->is_active,403);$documents=StudentDocument::where('student_id',$student->id)->latest('id')->get();return view('student.documents',compact('student','documents'));}
 }
