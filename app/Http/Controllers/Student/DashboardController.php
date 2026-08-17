@@ -16,4 +16,15 @@ class DashboardController extends Controller
 
         return view('student.dashboard', compact('student'));
     }
+
+    public function profile(Request $request): View
+    {
+        $student = $request->user()->student;
+
+        abort_unless($student && $student->is_active, 403);
+
+        $student->load('user');
+
+        return view('student.profile', compact('student'));
+    }
 }
