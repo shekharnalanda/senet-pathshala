@@ -38,8 +38,18 @@
         </div>
 
         <div class="row g-3">
+            <div class="col-md-6 col-lg-4">
+                <a href="{{ route('student.profile') }}" class="text-decoration-none text-reset">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <h5 class="fw-bold">Profile</h5>
+                            <p class="text-secondary mb-0">Personal and guardian details</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
             @foreach ([
-                ['Profile', 'Personal and guardian details'],
                 ['Digital ID Card', 'QR-enabled student identity card'],
                 ['Attendance', 'Daily and monthly attendance'],
                 ['Homework', 'Assignments and homework'],
