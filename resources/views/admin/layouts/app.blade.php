@@ -29,6 +29,7 @@
         <nav class="nav flex-column gap-1">
             <a class="admin-nav-link nav-link text-white {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}"><i class="fa-solid fa-gauge me-2"></i><span class="nav-text">Dashboard</span></a>
             <a class="admin-nav-link nav-link text-white {{ request()->routeIs('admin.students.*') ? 'active' : '' }}" href="{{ route('admin.students.index') }}"><i class="fa-solid fa-user-graduate me-2"></i><span class="nav-text">Students</span></a>
+            <a class="admin-nav-link nav-link text-white {{ request()->routeIs('admin.attendance.*') ? 'active' : '' }}" href="{{ route('admin.attendance.index') }}"><i class="fa-solid fa-calendar-check me-2"></i><span class="nav-text">Attendance</span></a>
             <a class="admin-nav-link nav-link text-white {{ request()->routeIs('admin.fees.*') ? 'active' : '' }}" href="{{ route('admin.fees.index') }}"><i class="fa-solid fa-indian-rupee-sign me-2"></i><span class="nav-text">Fees</span></a>
             <a class="admin-nav-link nav-link text-white {{ request()->routeIs('admin.student-id-cards.*') ? 'active' : '' }}" href="{{ route('admin.student-id-cards.index') }}"><i class="fa-solid fa-id-card me-2"></i><span class="nav-text">ID Cards</span></a>
             <a class="admin-nav-link nav-link text-white {{ request()->routeIs('admin.notices.*') ? 'active' : '' }}" href="{{ route('admin.notices.index') }}"><i class="fa-solid fa-bullhorn me-2"></i><span class="nav-text">Notices</span></a>
