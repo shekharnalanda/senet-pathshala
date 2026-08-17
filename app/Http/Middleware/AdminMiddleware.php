@@ -5,6 +5,6 @@ class AdminMiddleware
 {
 public function handle(Request $request,Closure $next):Response
 {
-$user=$request->user();if(!$user||(!$user->is_admin&&$user->role!=='class_teacher'))abort(403,'Management access required.');return $next($request);
+$user=$request->user();if(!$user||(!$user->is_admin&&!$user->isStaff()))abort(403,'Management access required.');return $next($request);
 }
 }
