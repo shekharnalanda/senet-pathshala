@@ -84,6 +84,15 @@ class StudentController extends Controller
         return redirect()->route('admin.students.index')->with('success', 'Student updated successfully.');
     }
 
+    public function toggleStatus(Student $student): RedirectResponse
+    {
+        $student->update(['is_active' => ! $student->is_active]);
+
+        return back()->with('success', $student->is_active
+            ? 'Student account activated successfully.'
+            : 'Student account deactivated successfully.');
+    }
+
     private function validateStudent(Request $request, ?Student $student = null): array
     {
         return $request->validate([
