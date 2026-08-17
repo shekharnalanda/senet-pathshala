@@ -25,7 +25,35 @@ class AuthController extends Controller
         }
 
         $request->session()->regenerate();
-        return redirect()->intended(route('admin.dashboard'));
+        $user = $request->user();
+
+        if ($user->is_admin) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        if ($user->hasPermission('fees')) {
+            return redirect()->route('admin.fees.index');
+        }
+        if ($user->hasPermission('certificates')) {
+            return redirect()->route('admin.documents.index');
+        }
+        if ($user->hasPermission('report_cards') || $user->hasPermission('results')) {
+            return redirect()->route('admin.results.index');
+        }
+        if ($user->hasPermission('attendance')) {
+            return redirect()->route('admin.attendance.index');
+        }
+        if ($user->hasPermission('homework')) {
+            return redirect()->route('admin.homework.index');
+        }
+        if ($user->hasPermission('students')) {
+            return redirect()->route('admin.students.index');
+        }
+
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect()->route('admin.login')->withErrors(['email' => 'No management permission has been assigned to this account.']);
     }
 
     public function logout(Request $request)
