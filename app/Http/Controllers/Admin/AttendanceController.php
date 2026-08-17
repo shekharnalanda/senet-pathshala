@@ -13,15 +13,30 @@ class AttendanceController extends Controller
 {
     public function index(Request $request): View
     {
+        abort_unless($request->user()->hasPermission('attendance'), 403);
+
         $date = $request->input('date', now()->format('Y-m-d'));
-        $students = Student::with('user')->where('is_active', true)->orderBy('class_name')->orderBy('roll_no')->get();
-        $attendance = Attendance::whereDate('attendance_date', $date)->get()->keyBy('student_id');
+        $query = Student::with('user')->where('is_active', true);
+
+        if ($request->user()->isClassTeacher()) {
+            $query->where('class_name', $request->user()->assigned_class);
+            if ($request->user()->assigned_section) {
+                $query->where('section', $request->user()->assigned_section);
+            }
+        }
+
+        $students = $query->orderBy('class_name')->orderBy('section')->orderBy('roll_no')->get();
+        $attendance = Attendance::whereDate('attendance_date', $date)
+            ->whereIn('student_id', $students->pluck('id'))
+            ->get()->keyBy('student_id');
 
         return view('admin.attendance.index', compact('date', 'students', 'attendance'));
     }
 
     public function store(Request $request): RedirectResponse
     {
+        abort_unless($request->user()->hasPermission('attendance'), 403);
+
         $data = $request->validate([
             'attendance_date' => ['required', 'date'],
             'attendance' => ['required', 'array'],
@@ -30,7 +45,17 @@ class AttendanceController extends Controller
         ]);
 
         foreach ($data['attendance'] as $studentId => $row) {
-            if (! Student::whereKey($studentId)->where('is_active', true)->exists()) continue;
+            $studentQuery = Student::whereKey($studentId)->where('is_active', true);
+
+            if ($request->user()->isClassTeacher()) {
+                $studentQuery->where('class_name', $request->user()->assigned_class);
+                if ($request->user()->assigned_section) {
+                    $studentQuery->where('section', $request->user()->assigned_section);
+                }
+            }
+
+            if (! $studentQuery->exists()) continue;
+
             Attendance::updateOrCreate(
                 ['student_id' => $studentId, 'attendance_date' => $data['attendance_date']],
                 ['status' => $row['status'], 'remark' => $row['remark'] ?? null]
