@@ -9,6 +9,8 @@ class Homework extends Model
 {
     use HasFactory;
 
+    protected $table = 'homeworks';
+
     protected $fillable = ['class_name', 'section', 'subject', 'homework_date', 'due_date', 'details'];
 
     protected $casts = [
