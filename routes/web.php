@@ -52,6 +52,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::patch('/students/{student}/status', [StudentController::class, 'toggleStatus'])->name('students.status');
         Route::get('/fees', [FeeController::class, 'index'])->name('fees.index');
         Route::post('/fees', [FeeController::class, 'store'])->name('fees.store');
+        Route::get('/fees/{payment}/receipt', [FeeController::class, 'receipt'])->name('fees.receipt');
         Route::get('/student-id-cards', [StudentIdCardController::class, 'index'])->name('student-id-cards.index');
         Route::post('/student-id-cards/print', [StudentIdCardController::class, 'print'])->name('student-id-cards.print');
         Route::get('/notices', [NoticeController::class, 'index'])->name('notices.index');
