@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\FeePayment;
+use App\Models\SchoolSetting;
 use App\Models\Student;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -38,5 +39,22 @@ class FeeController extends Controller
         FeePayment::create($data);
 
         return back()->with('success', 'Fee payment recorded successfully. Receipt: '.$data['receipt_no']);
+    }
+
+    public function receipt(FeePayment $payment): View
+    {
+        $payment->load('student.user');
+        $settings = SchoolSetting::first();
+        $paidTillNow = (float) FeePayment::where('student_id', $payment->student_id)
+            ->where(function ($query) use ($payment) {
+                $query->where('payment_date', '<', $payment->payment_date)
+                    ->orWhere(function ($query) use ($payment) {
+                        $query->where('payment_date', $payment->payment_date)
+                            ->where('id', '<=', $payment->id);
+                    });
+            })->sum('amount_paid');
+        $pending = max(0, (float) $payment->total_fee - $paidTillNow);
+
+        return view('admin.fees.receipt', compact('payment', 'settings', 'paidTillNow', 'pending'));
     }
 }
