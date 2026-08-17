@@ -13,5 +13,6 @@ class SchoolSetting extends Model
         'email',
         'address',
         'website',
+        'academic_session',
     ];
 }
