@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\SchoolSetting;
 use App\Models\Student;
 use App\Models\StudentDocument;
 use Illuminate\Http\RedirectResponse;
@@ -17,6 +18,20 @@ class StudentDocumentController extends Controller
         $students = Student::with('user')->where('is_active', true)->orderBy('admission_no')->get();
         $documents = StudentDocument::with('student.user')->latest('id')->get();
         return view('admin.documents.index', compact('students','documents'));
+    }
+
+    public function generate(Request $request): View
+    {
+        $data = $request->validate([
+            'student_id' => ['required','exists:students,id'],
+            'certificate_type' => ['required','in:bonafide,character,study'],
+            'purpose' => ['nullable','string','max:255'],
+        ]);
+        $student = Student::with('user')->findOrFail($data['student_id']);
+        $school = SchoolSetting::first();
+        $type = $data['certificate_type'];
+        $purpose = trim($data['purpose'] ?? '');
+        return view('admin.documents.certificate', compact('student','school','type','purpose'));
     }
 
     public function store(Request $request): RedirectResponse
