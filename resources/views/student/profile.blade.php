@@ -1,48 +1,5 @@
 @extends('layouts.app')
-
-@section('title', 'Student Profile')
-
+@section('title','Student Profile')
 @section('content')
-<section class="py-5 bg-light">
-    <div class="container">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-            <div>
-                <h1 class="h3 fw-bold mb-1">Student Profile</h1>
-                <p class="text-secondary mb-0">C-Net Pathshala</p>
-            </div>
-            <a href="{{ route('student.dashboard') }}" class="btn btn-outline-primary">Back to Dashboard</a>
-        </div>
-
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-4 p-lg-5">
-                <div class="row g-4 align-items-start">
-                    <div class="col-md-3 text-center">
-                        @if($student->photo)
-                            <img src="{{ asset('storage/'.$student->photo) }}" alt="{{ $student->user->name }}" class="img-fluid rounded shadow-sm" style="max-height:220px; object-fit:cover;">
-                        @else
-                            <div class="bg-light border rounded d-flex align-items-center justify-content-center mx-auto" style="width:160px;height:190px;">
-                                <span class="text-secondary">No Photo</span>
-                            </div>
-                        @endif
-                    </div>
-                    <div class="col-md-9">
-                        <h2 class="h4 fw-bold mb-4">{{ $student->user->name }}</h2>
-                        <div class="row g-3">
-                            <div class="col-sm-6"><strong>Admission No.:</strong><br>{{ $student->admission_no }}</div>
-                            <div class="col-sm-6"><strong>Email:</strong><br>{{ $student->user->email }}</div>
-                            <div class="col-sm-6"><strong>Class:</strong><br>{{ $student->class_name ?: '—' }}</div>
-                            <div class="col-sm-6"><strong>Section:</strong><br>{{ $student->section ?: '—' }}</div>
-                            <div class="col-sm-6"><strong>Roll No.:</strong><br>{{ $student->roll_no ?: '—' }}</div>
-                            <div class="col-sm-6"><strong>Date of Birth:</strong><br>{{ $student->date_of_birth ? $student->date_of_birth->format('d-m-Y') : '—' }}</div>
-                            <div class="col-sm-6"><strong>Gender:</strong><br>{{ $student->gender ?: '—' }}</div>
-                            <div class="col-sm-6"><strong>Guardian Name:</strong><br>{{ $student->guardian_name ?: '—' }}</div>
-                            <div class="col-sm-6"><strong>Guardian Phone:</strong><br>{{ $student->guardian_phone ?: '—' }}</div>
-                            <div class="col-12"><strong>Address:</strong><br>{{ $student->address ?: '—' }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+<section class="py-5 bg-light"><div class="container"><div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4"><div><h1 class="h3 fw-bold mb-1">Student Profile</h1><p class="text-secondary mb-0">C-Net Pathshala</p></div><a href="{{ route('student.dashboard') }}" class="btn btn-outline-primary">Back to Dashboard</a></div><div class="card border-0 shadow-sm"><div class="card-body p-4 p-lg-5"><div class="row g-4 align-items-start"><div class="col-md-3 text-center">@if($student->photo)<img src="{{ asset('storage/'.$student->photo) }}" alt="{{ $student->user->name }}" class="img-fluid rounded shadow-sm" style="max-height:220px;object-fit:cover">@else<div class="bg-light border rounded d-flex align-items-center justify-content-center mx-auto" style="width:160px;height:190px"><span class="text-secondary">No Photo</span></div>@endif</div><div class="col-md-9"><h2 class="h4 fw-bold mb-4">{{ $student->user->name }}</h2><div class="row g-3"><div class="col-sm-6"><strong>Admission No.:</strong><br>{{ $student->admission_no }}</div><div class="col-sm-6"><strong>Email:</strong><br>{{ $student->user->email }}</div><div class="col-sm-6"><strong>Class:</strong><br>{{ $student->class_name ?: '—' }}</div><div class="col-sm-6"><strong>Section:</strong><br>{{ $student->section ?: '—' }}</div><div class="col-sm-6"><strong>Roll No.:</strong><br>{{ $student->roll_no ?: '—' }}</div><div class="col-sm-6"><strong>Date of Birth:</strong><br>{{ $student->date_of_birth ? $student->date_of_birth->format('d-m-Y') : '—' }}</div><div class="col-sm-6"><strong>Gender:</strong><br>{{ $student->gender ?: '—' }}</div><div class="col-sm-6"><strong>Father's Name:</strong><br>{{ $student->father_name ?: '—' }}</div><div class="col-sm-6"><strong>Mother's Name:</strong><br>{{ $student->mother_name ?: '—' }}</div><div class="col-sm-6"><strong>Other Guardian:</strong><br>{{ $student->guardian_name ?: '—' }}</div><div class="col-sm-6"><strong>Guardian Phone:</strong><br>{{ $student->guardian_phone ?: '—' }}</div><div class="col-12"><strong>Address:</strong><br>{{ $student->address ?: '—' }}</div></div></div></div></div></div></div></section>
 @endsection
