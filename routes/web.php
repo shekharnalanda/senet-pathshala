@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\ContactController as AdminContactController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FeeController;
 use App\Http\Controllers\Admin\GalleryController;
+use App\Http\Controllers\Admin\HomeworkController;
 use App\Http\Controllers\Admin\NoticeController;
 use App\Http\Controllers\Admin\SchoolSettingController;
 use App\Http\Controllers\Admin\StudentController;
@@ -33,6 +34,7 @@ Route::prefix('student')->name('student.')->group(function () {
         Route::get('/profile', [StudentDashboardController::class, 'profile'])->name('profile');
         Route::get('/id-card', [StudentDashboardController::class, 'idCard'])->name('id-card');
         Route::get('/attendance', [StudentDashboardController::class, 'attendance'])->name('attendance');
+        Route::get('/homework', [StudentDashboardController::class, 'homework'])->name('homework');
         Route::post('/logout', [StudentAuthController::class, 'logout'])->name('logout');
     });
 });
@@ -54,6 +56,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::patch('/students/{student}/status', [StudentController::class, 'toggleStatus'])->name('students.status');
         Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
         Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
+        Route::get('/homework', [HomeworkController::class, 'index'])->name('homework.index');
+        Route::post('/homework', [HomeworkController::class, 'store'])->name('homework.store');
+        Route::delete('/homework/{homework}', [HomeworkController::class, 'destroy'])->name('homework.destroy');
         Route::get('/fees', [FeeController::class, 'index'])->name('fees.index');
         Route::post('/fees', [FeeController::class, 'store'])->name('fees.store');
         Route::get('/fees/{payment}/receipt', [FeeController::class, 'receipt'])->name('fees.receipt');
