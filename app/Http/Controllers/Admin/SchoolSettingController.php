@@ -27,16 +27,22 @@ class SchoolSettingController extends Controller
             'home_heading'=>['nullable','string','max:255'],'home_subheading'=>['nullable','string','max:1000'],
             'home_hero_image'=>['nullable','image','mimes:jpg,jpeg,png,webp','max:5120'],
             'about_heading'=>['nullable','string','max:255'],'about_content'=>['nullable','string','max:5000'],
+            'about_hero_image'=>['nullable','image','mimes:jpg,jpeg,png,webp','max:5120'],
+            'about_image_one'=>['nullable','image','mimes:jpg,jpeg,png,webp','max:5120'],
+            'about_image_two'=>['nullable','image','mimes:jpg,jpeg,png,webp','max:5120'],
             'gallery_heading'=>['nullable','string','max:255'],'gallery_subheading'=>['nullable','string','max:1000'],
         ], ['academic_session.regex'=>'Academic session must be like 2026-27.']);
 
         $settings = SchoolSetting::firstOrCreate([]);
-        if ($request->hasFile('home_hero_image')) {
-            if ($settings->home_hero_image) Storage::disk('public')->delete($settings->home_hero_image);
-            $data['home_hero_image'] = $request->file('home_hero_image')->store('website','public');
-        } else {
-            unset($data['home_hero_image']);
+        foreach (['home_hero_image','about_hero_image','about_image_one','about_image_two'] as $field) {
+            if ($request->hasFile($field)) {
+                if ($settings->{$field}) Storage::disk('public')->delete($settings->{$field});
+                $data[$field] = $request->file($field)->store('website','public');
+            } else {
+                unset($data[$field]);
+            }
         }
+
         $settings->update($data);
         return back()->with('success','Website and school settings updated successfully.');
     }
