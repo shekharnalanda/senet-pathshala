@@ -4,7 +4,7 @@
 
 @section('content')
 <style>
-.home-hero{position:relative;width:100%;overflow:hidden;background:#eef8ff}.hero-campus{width:100%;aspect-ratio:2.5/1;background-color:#eef8ff;background-image:url('{{ !empty($settings->home_hero_image) ? asset('storage/'.$settings->home_hero_image) : asset('images/school-building.jpg') }}');background-position:center center;background-size:contain;background-repeat:no-repeat}.program-link{text-decoration:none;color:inherit;display:block;height:100%}.program-link .program-card{transition:transform .2s ease,box-shadow .2s ease}.program-link:hover .program-card{transform:translateY(-4px);box-shadow:0 12px 30px rgba(0,0,0,.12)!important}.program-card-img{height:190px;object-fit:cover;width:100%;border-radius:16px}@media(max-width:991px){.hero-campus{aspect-ratio:16/9;background-size:contain}}@media(max-width:576px){.hero-campus{aspect-ratio:16/9;background-size:contain}}
+.home-hero{position:relative;width:100%;overflow:hidden;background:#eef8ff}.hero-campus{width:100%;aspect-ratio:2.5/1;background-color:#eef8ff;background-image:url('{{ !empty($settings->home_hero_image) ? asset('storage/'.$settings->home_hero_image) : asset('images/school-building.jpg') }}');background-position:center center;background-size:contain;background-repeat:no-repeat}.program-link{text-decoration:none;color:inherit;display:block;height:100%}.program-link .program-card{transition:transform .2s ease,box-shadow .2s ease}.program-link:hover .program-card{transform:translateY(-4px);box-shadow:0 12px 30px rgba(0,0,0,.12)!important}.program-card-img{height:190px;object-fit:cover;width:100%;border-radius:16px}.home-gallery-img{cursor:zoom-in;transition:transform .2s ease,box-shadow .2s ease}.home-gallery-img:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(0,0,0,.18)!important}.gallery-lightbox{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;padding:28px}.gallery-lightbox.is-open{display:flex}.gallery-lightbox img{max-width:95vw;max-height:90vh;width:auto;height:auto;object-fit:contain;border-radius:10px;box-shadow:0 18px 60px rgba(0,0,0,.45)}.gallery-lightbox-close{position:absolute;top:18px;right:24px;width:46px;height:46px;border:0;border-radius:50%;background:#fff;color:#111;font-size:28px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}.gallery-lightbox-caption{position:absolute;left:20px;right:20px;bottom:12px;text-align:center;color:#fff;font-weight:600;text-shadow:0 1px 3px #000}@media(max-width:991px){.hero-campus{aspect-ratio:16/9;background-size:contain}}@media(max-width:576px){.hero-campus{aspect-ratio:16/9;background-size:contain}.gallery-lightbox{padding:14px}.gallery-lightbox-close{top:10px;right:10px}}
 </style>
 
 <section class="home-hero"><div class="hero-campus" role="img" aria-label="School hero banner"></div></section>
@@ -15,9 +15,46 @@
 
 <section class="py-5"><div class="container py-lg-3"><div class="text-center mb-5"><span class="section-kicker">Updates</span><h2 class="display-6 fw-bold mt-2">Latest Notices</h2></div><div class="list-group shadow-sm rounded-4 overflow-hidden">@forelse($notices as $notice)<div class="list-group-item p-4"><strong>{{ $notice->title }}</strong><span class="text-secondary float-end">{{ $notice->notice_date?->format('d M Y') }}</span>@if($notice->description)<p class="text-secondary mb-0 mt-2">{{ $notice->description }}</p>@endif</div>@empty<div class="list-group-item p-4 text-secondary">No published notices at the moment.</div>@endforelse</div></div></section>
 
-<section class="py-5 bg-light"><div class="container py-lg-3"><div class="text-center mb-5"><span class="section-kicker">Campus Life</span><h2 class="display-6 fw-bold mt-2">{{ $settings?->gallery_heading ?: 'School Gallery' }}</h2>@if($settings?->gallery_subheading)<p class="text-secondary">{{ $settings->gallery_subheading }}</p>@endif</div><div class="row g-4">@forelse($galleries as $gallery)<div class="col-lg-3 col-md-6"><img src="{{ asset('storage/'.$gallery->image) }}" class="img-fluid rounded-4 shadow-sm w-100" style="height:220px;object-fit:cover" alt="{{ $gallery->title }}"></div>@empty<div class="col-12 text-center text-secondary">Gallery photos will appear here after they are uploaded from Admin.</div>@endforelse</div></div></section>
+<section class="py-5 bg-light"><div class="container py-lg-3"><div class="text-center mb-5"><span class="section-kicker">Campus Life</span><h2 class="display-6 fw-bold mt-2">{{ $settings?->gallery_heading ?: 'School Gallery' }}</h2>@if($settings?->gallery_subheading)<p class="text-secondary">{{ $settings->gallery_subheading }}</p>@endif</div><div class="row g-4">@forelse($galleries as $gallery)<div class="col-lg-3 col-md-6"><img src="{{ asset('storage/'.$gallery->image) }}" class="img-fluid rounded-4 shadow-sm w-100 home-gallery-img" style="height:220px;object-fit:cover" alt="{{ $gallery->title }}" data-full-image="{{ asset('storage/'.$gallery->image) }}" data-caption="{{ $gallery->title }}"></div>@empty<div class="col-12 text-center text-secondary">Gallery photos will appear here after they are uploaded from Admin.</div>@endforelse</div></div></section>
+
+<div class="gallery-lightbox" id="galleryLightbox" aria-hidden="true"><button type="button" class="gallery-lightbox-close" id="galleryLightboxClose" aria-label="Close image">&times;</button><img id="galleryLightboxImage" src="" alt=""><div class="gallery-lightbox-caption" id="galleryLightboxCaption"></div></div>
 
 <section class="py-5 bg-primary text-white"><div class="container py-3"><div class="row align-items-center g-4"><div class="col-lg-8"><span class="badge bg-warning text-dark rounded-pill mb-2">Session {{ $settings?->academic_session ?: '—' }}</span><h2 class="display-6 fw-bold">Admissions are now open.</h2><p class="mb-0 opacity-75">Take the first step toward a happy and confident learning journey.</p></div><div class="col-lg-4 text-lg-end"><a href="{{ route('admission') }}" class="btn btn-warning rounded-pill px-4 py-2 fw-bold">Apply Now</a></div></div></div></section>
 
 <section class="py-5"><div class="container"><div class="program-card text-start"><span class="section-kicker">School Office</span><h3 class="mt-2">{{ $settings->school_name ?? 'C-Net Pathshala' }}</h3><p class="mb-2"><strong>Phone:</strong> {{ $settings->phone ?? '—' }}</p><p class="mb-2"><strong>Email:</strong> {{ $settings->email ?? '—' }}</p><p class="mb-0"><strong>Address:</strong> {{ $settings->address ?? '—' }}</p></div></div></section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const lightbox = document.getElementById('galleryLightbox');
+    const lightboxImage = document.getElementById('galleryLightboxImage');
+    const lightboxCaption = document.getElementById('galleryLightboxCaption');
+    const closeButton = document.getElementById('galleryLightboxClose');
+
+    function closeGalleryLightbox() {
+        lightbox.classList.remove('is-open');
+        lightbox.setAttribute('aria-hidden', 'true');
+        lightboxImage.src = '';
+        document.body.style.overflow = '';
+    }
+
+    document.querySelectorAll('.home-gallery-img').forEach(function (image) {
+        image.addEventListener('click', function () {
+            lightboxImage.src = image.dataset.fullImage;
+            lightboxImage.alt = image.alt || '';
+            lightboxCaption.textContent = image.dataset.caption || '';
+            lightbox.classList.add('is-open');
+            lightbox.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        });
+    });
+
+    closeButton.addEventListener('click', closeGalleryLightbox);
+    lightbox.addEventListener('click', function (event) {
+        if (event.target === lightbox) closeGalleryLightbox();
+    });
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && lightbox.classList.contains('is-open')) closeGalleryLightbox();
+    });
+});
+</script>
 @endsection
