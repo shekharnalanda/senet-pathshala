@@ -3,34 +3,18 @@
 @section('title', 'About Us')
 
 @section('content')
-<section class="py-5 bg-light">
-    <div class="container">
-        <div class="row align-items-center g-5">
-            <div class="col-lg-7">
-                <span class="text-primary fw-semibold">ABOUT OUR SCHOOL</span>
-                <h1 class="display-5 fw-bold mt-2">A place to learn, grow and shine.</h1>
-                <p class="lead text-secondary">We are committed to providing a safe, supportive and inspiring learning environment where every child can build strong foundations for the future.</p>
-                <p class="text-secondary">Our approach combines academic learning with values, creativity, confidence and practical skills. We encourage students to stay curious, respect others and discover their individual strengths.</p>
-            </div>
-            <div class="col-lg-5">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body p-4">
-                        <h4 class="fw-bold">Our Mission</h4>
-                        <p class="text-secondary mb-0">To nurture responsible, confident and capable learners through quality education, caring mentorship and meaningful opportunities.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+@php($settings = \App\Models\SchoolSetting::first())
+<style>
+.about-hero{position:relative;min-height:420px;display:flex;align-items:center;background-image:linear-gradient(90deg,rgba(6,34,75,.88),rgba(13,110,253,.55)),url('{{ $settings?->about_hero_image ? asset('storage/'.$settings->about_hero_image) : ($settings?->home_hero_image ? asset('storage/'.$settings->home_hero_image) : asset('images/school-building.jpg')) }}');background-size:cover;background-position:center;border-bottom:6px solid #ffc107}.about-hero h1{font-size:clamp(2.4rem,5vw,4.6rem)}.about-badge{display:inline-block;padding:.5rem 1rem;border-radius:999px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);font-weight:700}.about-card{border:0;border-radius:22px;box-shadow:0 14px 35px rgba(25,55,90,.09);height:100%}.about-card-icon{width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.5rem}.about-photo{width:100%;height:340px;object-fit:cover;border-radius:24px;box-shadow:0 18px 40px rgba(0,0,0,.12)}.about-photo-tall{height:400px}.about-soft-blue{background:linear-gradient(135deg,#eef7ff,#f8fbff)}.about-soft-yellow{background:linear-gradient(135deg,#fff8dc,#fffdf5)}.about-soft-pink{background:linear-gradient(135deg,#fff0f5,#fff8fb)}.about-soft-green{background:linear-gradient(135deg,#eefbf3,#f8fffb)}.about-quote{border-left:5px solid #0d6efd;padding-left:20px;font-size:1.15rem;font-weight:600;color:#17375e}@media(max-width:767px){.about-hero{min-height:330px}.about-photo,.about-photo-tall{height:280px}}
+</style>
 
-<section class="py-5">
-    <div class="container">
-        <div class="row g-4">
-            <div class="col-md-4"><div class="h-100 p-4 border rounded-3"><h4>Academic Excellence</h4><p class="text-secondary mb-0">Strong fundamentals, thoughtful teaching and continuous encouragement help students progress with confidence.</p></div></div>
-            <div class="col-md-4"><div class="h-100 p-4 border rounded-3"><h4>Character & Values</h4><p class="text-secondary mb-0">We promote discipline, kindness, responsibility, teamwork and respect in everyday school life.</p></div></div>
-            <div class="col-md-4"><div class="h-100 p-4 border rounded-3"><h4>All-Round Growth</h4><p class="text-secondary mb-0">Activities, creativity and practical experiences help children develop beyond the classroom.</p></div></div>
-        </div>
-    </div>
-</section>
+<section class="about-hero text-white"><div class="container py-5"><div class="row"><div class="col-lg-8"><span class="about-badge">ABOUT C-NET PATHSHALA</span><h1 class="fw-bold mt-3 mb-3">{{ $settings?->about_heading ?: 'A place to learn, grow and shine.' }}</h1><p class="lead mb-0 opacity-90">A caring school community where strong foundations, good values and joyful learning come together.</p></div></div></div></section>
+
+<section class="py-5"><div class="container py-lg-4"><div class="row align-items-center g-5"><div class="col-lg-6"><span class="text-primary fw-bold">WHO WE ARE</span><h2 class="display-6 fw-bold mt-2">Learning with purpose, growing with confidence.</h2><p class="lead text-secondary">{{ $settings?->about_content ?: 'We are committed to providing a safe, supportive and inspiring learning environment where every child can build strong foundations for the future.' }}</p><p class="text-secondary">Our approach combines academic learning with values, creativity, confidence and practical skills. We encourage students to stay curious, respect others and discover their individual strengths.</p><div class="about-quote mt-4">Every child deserves the chance to feel safe, valued, capable and excited to learn.</div></div><div class="col-lg-6"><img src="{{ $settings?->about_image_one ? asset('storage/'.$settings->about_image_one) : asset('images/school-building.jpg') }}" class="about-photo about-photo-tall" alt="C-Net Pathshala learning environment"></div></div></div></section>
+
+<section class="py-5 about-soft-blue"><div class="container py-lg-3"><div class="text-center mb-5"><span class="text-primary fw-bold">WHAT GUIDES US</span><h2 class="display-6 fw-bold mt-2">Our Mission & Values</h2></div><div class="row g-4"><div class="col-md-4"><div class="about-card p-4 about-soft-yellow"><div class="about-card-icon bg-warning bg-opacity-25 text-warning mb-3"><i class="fa-solid fa-graduation-cap"></i></div><h4>Academic Excellence</h4><p class="text-secondary mb-0">Strong fundamentals, thoughtful teaching and continuous encouragement help students progress with confidence.</p></div></div><div class="col-md-4"><div class="about-card p-4 about-soft-pink"><div class="about-card-icon bg-danger bg-opacity-10 text-danger mb-3"><i class="fa-solid fa-heart"></i></div><h4>Character & Values</h4><p class="text-secondary mb-0">We promote discipline, kindness, responsibility, teamwork and respect in everyday school life.</p></div></div><div class="col-md-4"><div class="about-card p-4 about-soft-green"><div class="about-card-icon bg-success bg-opacity-10 text-success mb-3"><i class="fa-solid fa-seedling"></i></div><h4>All-Round Growth</h4><p class="text-secondary mb-0">Activities, creativity and practical experiences help children develop beyond the classroom.</p></div></div></div></div></section>
+
+<section class="py-5"><div class="container py-lg-4"><div class="row align-items-center g-5"><div class="col-lg-6 order-lg-2"><span class="text-primary fw-bold">OUR MISSION</span><h2 class="display-6 fw-bold mt-2">Preparing children for a bright future.</h2><p class="text-secondary">Our mission is to nurture responsible, confident and capable learners through quality education, caring mentorship and meaningful opportunities.</p><p class="text-secondary">We want every student to leave school with curiosity, good character, practical confidence and the courage to keep learning.</p><div class="row g-3 mt-2"><div class="col-6"><div class="p-3 rounded-4 about-soft-yellow text-center"><i class="fa-solid fa-shield-heart fs-3 text-warning mb-2"></i><div class="fw-bold">Safe & Caring</div></div></div><div class="col-6"><div class="p-3 rounded-4 about-soft-green text-center"><i class="fa-solid fa-lightbulb fs-3 text-success mb-2"></i><div class="fw-bold">Joyful Learning</div></div></div></div></div><div class="col-lg-6 order-lg-1"><img src="{{ $settings?->about_image_two ? asset('storage/'.$settings->about_image_two) : asset('images/school-building.jpg') }}" class="about-photo" alt="Students and school activities"></div></div></div></section>
+
+<section class="py-5 bg-primary text-white"><div class="container"><div class="row align-items-center g-4"><div class="col-lg-8"><h2 class="display-6 fw-bold mb-2">Come grow with C-Net Pathshala.</h2><p class="mb-0 opacity-75">Discover a learning environment built around care, confidence and strong foundations.</p></div><div class="col-lg-4 text-lg-end"><a href="{{ route('admission') }}" class="btn btn-warning btn-lg rounded-pill px-4 fw-bold">Explore Admissions</a></div></div></div></section>
 @endsection
