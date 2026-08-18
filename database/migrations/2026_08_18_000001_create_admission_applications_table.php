@@ -1,0 +1,5 @@
+<?php
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+return new class extends Migration { public function up(): void { Schema::create('admission_applications',function(Blueprint $table){$table->id();$table->string('application_no')->unique();$table->string('student_name');$table->date('date_of_birth')->nullable();$table->string('gender',20)->nullable();$table->string('class_applied');$table->string('father_name')->nullable();$table->string('mother_name')->nullable();$table->string('guardian_name')->nullable();$table->string('phone',30);$table->string('alternate_phone',30)->nullable();$table->string('email')->nullable();$table->text('address')->nullable();$table->string('previous_school')->nullable();$table->text('message')->nullable();$table->string('status',20)->default('pending')->index();$table->text('admin_note')->nullable();$table->timestamp('reviewed_at')->nullable();$table->timestamps();}); } public function down(): void { Schema::dropIfExists('admission_applications'); } };
