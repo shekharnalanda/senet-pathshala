@@ -30,11 +30,14 @@ class SchoolSettingController extends Controller
             'about_hero_image'=>['nullable','image','mimes:jpg,jpeg,png,webp','max:5120'],
             'about_image_one'=>['nullable','image','mimes:jpg,jpeg,png,webp','max:5120'],
             'about_image_two'=>['nullable','image','mimes:jpg,jpeg,png,webp','max:5120'],
+            'admission_hero_image'=>['nullable','image','mimes:jpg,jpeg,png,webp','max:5120'],
+            'admission_image_one'=>['nullable','image','mimes:jpg,jpeg,png,webp','max:5120'],
+            'admission_image_two'=>['nullable','image','mimes:jpg,jpeg,png,webp','max:5120'],
             'gallery_heading'=>['nullable','string','max:255'],'gallery_subheading'=>['nullable','string','max:1000'],
         ], ['academic_session.regex'=>'Academic session must be like 2026-27.']);
 
         $settings = SchoolSetting::firstOrCreate([]);
-        foreach (['home_hero_image','about_hero_image','about_image_one','about_image_two'] as $field) {
+        foreach (['home_hero_image','about_hero_image','about_image_one','about_image_two','admission_hero_image','admission_image_one','admission_image_two'] as $field) {
             if ($request->hasFile($field)) {
                 if ($settings->{$field}) Storage::disk('public')->delete($settings->{$field});
                 $data[$field] = $request->file($field)->store('website','public');
