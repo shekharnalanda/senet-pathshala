@@ -16,6 +16,7 @@ class AttendanceController extends Controller
         abort_unless($request->user()->hasPermission('attendance'), 403);
 
         $date = $request->input('date', now()->format('Y-m-d'));
+        $search = trim((string) $request->query('q', ''));
         $query = Student::with('user')->where('is_active', true);
 
         if ($request->user()->isClassTeacher()) {
@@ -25,12 +26,19 @@ class AttendanceController extends Controller
             }
         }
 
+        if ($search !== '') {
+            $query->where(function ($studentQuery) use ($search) {
+                $studentQuery->where('admission_no', 'like', '%'.$search.'%')
+                    ->orWhereHas('user', fn ($userQuery) => $userQuery->where('name', 'like', '%'.$search.'%'));
+            });
+        }
+
         $students = $query->orderBy('class_name')->orderBy('section')->orderBy('roll_no')->get();
         $attendance = Attendance::whereDate('attendance_date', $date)
             ->whereIn('student_id', $students->pluck('id'))
             ->get()->keyBy('student_id');
 
-        return view('admin.attendance.index', compact('date', 'students', 'attendance'));
+        return view('admin.attendance.index', compact('date', 'students', 'attendance', 'search'));
     }
 
     public function store(Request $request): RedirectResponse

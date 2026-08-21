@@ -9,15 +9,31 @@ use Illuminate\View\View;
 
 class StudentIdCardController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $students = Student::with('user')
-            ->where('is_active', true)
+        $search = trim((string) $request->query('q', ''));
+        $query = Student::with('user')->where('is_active', true);
+
+        if ($request->user()->isClassTeacher()) {
+            $query->where('class_name', $request->user()->assigned_class);
+            if ($request->user()->assigned_section) {
+                $query->where('section', $request->user()->assigned_section);
+            }
+        }
+
+        if ($search !== '') {
+            $query->where(function ($studentQuery) use ($search) {
+                $studentQuery->where('admission_no', 'like', '%'.$search.'%')
+                    ->orWhereHas('user', fn ($userQuery) => $userQuery->where('name', 'like', '%'.$search.'%'));
+            });
+        }
+
+        $students = $query
             ->orderBy('class_name')
             ->orderBy('roll_no')
             ->get();
 
-        return view('admin.student-id-cards.index', compact('students'));
+        return view('admin.student-id-cards.index', compact('students', 'search'));
     }
 
     public function print(Request $request): View

@@ -4,6 +4,7 @@
 @section('content')
 <div class="mb-4"><h1 class="fw-bold">Bulk ID Card Print</h1><p class="text-secondary mb-0">Select exactly 2 active students to print on one A4 portrait sheet.</p></div>
 @if($errors->any())<div class="alert alert-danger">{{ $errors->first() }}</div>@endif
+<div class="card border-0 shadow-sm mb-4"><div class="card-body"><form method="GET" action="{{ route('admin.student-id-cards.index') }}" class="row g-2"><div class="col-md-9"><label class="form-label">Search Student</label><input type="search" name="q" value="{{ $search }}" class="form-control" placeholder="Admission number or student name"></div><div class="col-md-3 d-flex align-items-end gap-2"><button class="btn btn-primary flex-fill">Search</button>@if($search !== '')<a href="{{ route('admin.student-id-cards.index') }}" class="btn btn-outline-secondary">Clear</a>@endif</div></form></div></div>
 <form method="POST" action="{{ route('admin.student-id-cards.print') }}" target="_blank">@csrf
 <div class="card border-0 shadow-sm"><div class="card-body p-4">
 <div class="table-responsive"><table class="table align-middle"><thead><tr><th style="width:60px">Select</th><th>Student</th><th>Admission No.</th><th>Class / Section</th><th>Roll No.</th></tr></thead><tbody>
