@@ -18,7 +18,9 @@ class HomeworkController extends Controller
         $user = $request->user();
         $query = Homework::with('branch');
 
-        if ($request->filled('branch_id')) {
+        if (! $user->is_admin && $user->branch_id) {
+            $query->where('branch_id', $user->branch_id);
+        } elseif ($request->filled('branch_id')) {
             $query->where('branch_id', $request->integer('branch_id'));
         }
 
@@ -27,12 +29,18 @@ class HomeworkController extends Controller
             if ($user->assigned_section) $query->where('section', $user->assigned_section);
             $classes = collect([$user->assigned_class]);
         } else {
-            $classes = Student::whereNotNull('class_name')->where('class_name', '<>', '')
-                ->select('class_name')->distinct()->orderBy('class_name')->pluck('class_name');
+            $classQuery = Student::whereNotNull('class_name')->where('class_name', '<>', '');
+            if (! $user->is_admin && $user->branch_id) {
+                $classQuery->where('branch_id', $user->branch_id);
+            }
+            $classes = $classQuery->select('class_name')->distinct()->orderBy('class_name')->pluck('class_name');
         }
 
-        $branches = Branch::where('is_active', true)->orderByDesc('is_main')->orderBy('name')->get();
+        $branches = Branch::where('is_active', true)
+            ->when(! $user->is_admin && $user->branch_id, fn ($q) => $q->whereKey($user->branch_id))
+            ->orderByDesc('is_main')->orderBy('name')->get();
         $homeworks = $query->latest('homework_date')->latest('id')->get();
+
         return view('admin.homework.index', compact('homeworks', 'classes', 'branches'));
     }
 
@@ -48,13 +56,18 @@ class HomeworkController extends Controller
             'due_date' => ['nullable', 'date', 'after_or_equal:homework_date'],
             'details' => ['required', 'string', 'max:5000'],
         ]);
+
         $user = $request->user();
+        if (! $user->is_admin && $user->branch_id) {
+            abort_unless((int) $data['branch_id'] === (int) $user->branch_id, 403);
+        }
         if ($user->isClassTeacher()) {
             abort_unless($data['class_name'] === $user->assigned_class, 403);
             if ($user->assigned_section) {
                 abort_unless(($data['section'] ?? null) === $user->assigned_section, 403);
             }
         }
+
         Homework::create($data);
         return back()->with('success', 'Homework added successfully.');
     }
@@ -63,9 +76,14 @@ class HomeworkController extends Controller
     {
         abort_unless($request->user()->hasPermission('homework'), 403);
         $user = $request->user();
-        if ($user->isClassTeacher()) {
-            abort_unless($homework->class_name === $user->assigned_class && (!$user->assigned_section || $homework->section === $user->assigned_section), 403);
+
+        if (! $user->is_admin && $user->branch_id) {
+            abort_unless((int) $homework->branch_id === (int) $user->branch_id, 403);
         }
+        if ($user->isClassTeacher()) {
+            abort_unless($homework->class_name === $user->assigned_class && (! $user->assigned_section || $homework->section === $user->assigned_section), 403);
+        }
+
         $homework->delete();
         return back()->with('success', 'Homework deleted successfully.');
     }
