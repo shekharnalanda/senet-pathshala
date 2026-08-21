@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
+use App\Models\SchoolClass;
 use App\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -12,24 +13,17 @@ class StudentIdCardController extends Controller
 {
     public function index(Request $request): View
     {
-        $user = $request->user();
+        abort_unless($request->user()->is_admin, 403);
+
         $search = trim((string) $request->query('q', ''));
-        $query = Student::with(['user', 'branch'])->where('is_active', true);
+        $branchId = $request->filled('branch_id') ? $request->integer('branch_id') : null;
+        $className = trim((string) $request->query('class_name', ''));
+        $section = trim((string) $request->query('section', ''));
 
-        if (! $user->is_admin && $user->branch_id) {
-            $query->where('branch_id', $user->branch_id);
-        }
-
-        if ($user->isClassTeacher()) {
-            $query->where('class_name', $user->assigned_class);
-            if ($user->assigned_section) {
-                $query->where('section', $user->assigned_section);
-            }
-        }
-
-        if ($user->is_admin && $request->filled('branch_id')) {
-            $query->where('branch_id', $request->integer('branch_id'));
-        }
+        $query = Student::with(['user', 'branch'])->where('is_active', true)
+            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+            ->when($className !== '', fn ($q) => $q->where('class_name', $className))
+            ->when($section !== '', fn ($q) => $q->where('section', $section));
 
         if ($search !== '') {
             $query->where(function ($studentQuery) use ($search) {
@@ -38,21 +32,30 @@ class StudentIdCardController extends Controller
             });
         }
 
-        $students = $query
-            ->orderBy('class_name')
-            ->orderBy('roll_no')
-            ->get();
+        $students = $query->orderBy('class_name')->orderBy('section')->orderBy('roll_no')->get();
+        $branches = Branch::where('is_active', true)->orderByDesc('is_main')->orderBy('name')->get();
+        $classes = SchoolClass::where('is_active', true)
+            ->when($branchId, fn ($q) => $q->where(function ($x) use ($branchId) {
+                $x->whereNull('branch_id')->orWhere('branch_id', $branchId);
+            }))
+            ->orderBy('sort_order')->orderBy('name')->get();
 
-        $branches = $user->is_admin
-            ? Branch::where('is_active', true)->orderByDesc('is_main')->orderBy('name')->get()
-            : Branch::whereKey($user->branch_id)->get();
+        $sections = collect();
+        if ($className !== '') {
+            $sections = $classes->where('name', $className)
+                ->flatMap(fn ($class) => $class->section_list ?? [])
+                ->filter()->unique()->sort()->values();
+        }
 
-        return view('admin.student-id-cards.index', compact('students', 'branches', 'search'));
+        return view('admin.student-id-cards.index', compact(
+            'students', 'branches', 'classes', 'sections', 'search', 'branchId', 'className', 'section'
+        ));
     }
 
     public function print(Request $request): View
     {
-        $user = $request->user();
+        abort_unless($request->user()->is_admin, 403);
+
         $data = $request->validate([
             'students' => ['required', 'array', 'size:2'],
             'students.*' => ['required', 'integer', 'distinct', 'exists:students,id'],
@@ -62,20 +65,12 @@ class StudentIdCardController extends Controller
         $found = Student::with(['user', 'branch'])
             ->where('is_active', true)
             ->whereIn('id', $selectedIds)
-            ->when(! $user->is_admin && $user->branch_id, fn ($query) => $query->where('branch_id', $user->branch_id))
-            ->when($user->isClassTeacher(), function ($query) use ($user) {
-                $query->where('class_name', $user->assigned_class);
-                if ($user->assigned_section) {
-                    $query->where('section', $user->assigned_section);
-                }
-            })
             ->get()
             ->keyBy('id');
 
-        abort_unless($found->count() === 2, 422, 'Please select two active students from your assigned campus.');
+        abort_unless($found->count() === 2, 422, 'Please select exactly two active students.');
 
         $students = collect($selectedIds)->map(fn ($id) => $found->get($id));
-
         return view('admin.student-id-cards.print', compact('students'));
     }
 }
