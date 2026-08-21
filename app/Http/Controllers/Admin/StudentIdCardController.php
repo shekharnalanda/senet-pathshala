@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Branch;
 use App\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -12,13 +13,17 @@ class StudentIdCardController extends Controller
     public function index(Request $request): View
     {
         $search = trim((string) $request->query('q', ''));
-        $query = Student::with('user')->where('is_active', true);
+        $query = Student::with(['user', 'branch'])->where('is_active', true);
 
         if ($request->user()->isClassTeacher()) {
             $query->where('class_name', $request->user()->assigned_class);
             if ($request->user()->assigned_section) {
                 $query->where('section', $request->user()->assigned_section);
             }
+        }
+
+        if ($request->filled('branch_id')) {
+            $query->where('branch_id', $request->integer('branch_id'));
         }
 
         if ($search !== '') {
@@ -33,7 +38,12 @@ class StudentIdCardController extends Controller
             ->orderBy('roll_no')
             ->get();
 
-        return view('admin.student-id-cards.index', compact('students', 'search'));
+        $branches = Branch::where('is_active', true)
+            ->orderByDesc('is_main')
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.student-id-cards.index', compact('students', 'branches', 'search'));
     }
 
     public function print(Request $request): View
@@ -44,7 +54,7 @@ class StudentIdCardController extends Controller
         ]);
 
         $selectedIds = $data['students'];
-        $found = Student::with('user')
+        $found = Student::with(['user', 'branch'])
             ->where('is_active', true)
             ->whereIn('id', $selectedIds)
             ->get()
