@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\Notice;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class NoticeController extends Controller
 {
@@ -14,7 +15,10 @@ class NoticeController extends Controller
         abort_unless($request->user()->is_admin, 403);
         $query = Notice::with('branch')->latest('notice_date');
         if ($request->filled('branch_id')) {
-            $query->where('branch_id', $request->integer('branch_id'));
+            $branchId = $request->integer('branch_id');
+            if (Branch::whereKey($branchId)->where('is_active', true)->exists()) {
+                $query->where('branch_id', $branchId);
+            }
         }
         $branches = Branch::where('is_active', true)->orderByDesc('is_main')->orderBy('name')->get();
         $notices = $query->paginate(15)->withQueryString();
@@ -25,7 +29,7 @@ class NoticeController extends Controller
     {
         abort_unless($request->user()->is_admin, 403);
         $data = $request->validate([
-            'branch_id' => ['nullable', 'exists:branches,id'],
+            'branch_id' => ['nullable', Rule::exists('branches', 'id')->where('is_active', true)],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'notice_date' => ['required', 'date'],
@@ -41,7 +45,7 @@ class NoticeController extends Controller
     {
         abort_unless($request->user()->is_admin, 403);
         $data = $request->validate([
-            'branch_id' => ['nullable', 'exists:branches,id'],
+            'branch_id' => ['nullable', Rule::exists('branches', 'id')->where('is_active', true)],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'notice_date' => ['required', 'date'],
