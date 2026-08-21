@@ -8,6 +8,7 @@ use App\Models\Homework;
 use App\Models\SchoolClass;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class HomeworkController extends Controller
@@ -20,7 +21,7 @@ class HomeworkController extends Controller
 
         if (! $user->is_admin && $user->branch_id) {
             $query->where('branch_id', $user->branch_id);
-        } elseif ($request->filled('branch_id')) {
+        } elseif ($request->filled('branch_id') && Branch::where('is_active', true)->whereKey($request->integer('branch_id'))->exists()) {
             $query->where('branch_id', $request->integer('branch_id'));
         }
 
@@ -52,7 +53,7 @@ class HomeworkController extends Controller
     {
         abort_unless($request->user()->hasPermission('homework'), 403);
         $data = $request->validate([
-            'branch_id' => ['required', 'exists:branches,id'],
+            'branch_id' => ['required', Rule::exists('branches', 'id')->where('is_active', true)],
             'class_name' => ['required', 'string', 'max:100'],
             'section' => ['nullable', 'string', 'max:50'],
             'subject' => ['required', 'string', 'max:150'],
