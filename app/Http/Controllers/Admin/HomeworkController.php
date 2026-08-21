@@ -31,12 +31,11 @@ class HomeworkController extends Controller
                 ->where('name', $user->assigned_class)
                 ->where(function ($q) use ($user) {
                     $q->whereNull('branch_id')->orWhere('branch_id', $user->branch_id);
-                })->get();
+                })->orderBy('sort_order')->orderBy('name')->get();
         } else {
-            $classBranchId = $user->is_admin ? $request->integer('branch_id') : $user->branch_id;
             $classes = SchoolClass::where('is_active', true)
-                ->when($classBranchId, fn ($q) => $q->where(function ($x) use ($classBranchId) {
-                    $x->whereNull('branch_id')->orWhere('branch_id', $classBranchId);
+                ->when(! $user->is_admin && $user->branch_id, fn ($q) => $q->where(function ($x) use ($user) {
+                    $x->whereNull('branch_id')->orWhere('branch_id', $user->branch_id);
                 }))
                 ->orderBy('sort_order')->orderBy('name')->get();
         }
