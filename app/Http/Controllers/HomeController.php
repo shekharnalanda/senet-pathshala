@@ -23,12 +23,14 @@ class HomeController extends Controller
 
         $notices = Notice::with('branch')
             ->where('status', true)
+            ->where(fn ($q) => $q->whereNull('branch_id')->orWhereHas('branch', fn ($branch) => $branch->where('is_active', true)))
             ->when($selectedBranchId, fn ($q) => $q->where(fn ($x) => $x->whereNull('branch_id')->orWhere('branch_id', $selectedBranchId)))
             ->latest('notice_date')
             ->take(5)
             ->get();
 
         $galleries = Gallery::with('branch')
+            ->where(fn ($q) => $q->whereNull('branch_id')->orWhereHas('branch', fn ($branch) => $branch->where('is_active', true)))
             ->when($selectedBranchId, fn ($q) => $q->where(fn ($x) => $x->whereNull('branch_id')->orWhere('branch_id', $selectedBranchId)))
             ->latest()
             ->take(8)
@@ -36,6 +38,7 @@ class HomeController extends Controller
 
         $programs = LearningProgram::with('branch')
             ->where('is_active', true)
+            ->where(fn ($q) => $q->whereNull('branch_id')->orWhereHas('branch', fn ($branch) => $branch->where('is_active', true)))
             ->when($selectedBranchId, fn ($q) => $q->where(fn ($x) => $x->whereNull('branch_id')->orWhere('branch_id', $selectedBranchId)))
             ->orderBy('sort_order')
             ->orderBy('name')
