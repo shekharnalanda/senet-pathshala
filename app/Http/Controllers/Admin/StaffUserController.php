@@ -33,7 +33,7 @@ class StaffUserController extends Controller
     private function validated(Request $request,?User $user=null): array
     {
         $data=$request->validate([
-            'branch_id'=>['required','exists:branches,id'],
+            'branch_id'=>['required',Rule::exists('branches','id')->where('is_active',true)],
             'name'=>['required','string','max:255'],'email'=>['required','email','max:255',Rule::unique('users','email')->ignore($user?->id)],
             'password'=>[$user?'nullable':'required','string','min:6'],'role'=>['required','in:class_teacher,office_manager,principal'],
             'assigned_class'=>['nullable','string','max:100'],'assigned_section'=>['nullable','string','max:50'],
