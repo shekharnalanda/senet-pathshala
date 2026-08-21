@@ -18,7 +18,10 @@ class LearningProgramController extends Controller
     {
         abort_unless($request->user()->is_admin,403);
         $query=LearningProgram::with('branch')->orderBy('sort_order')->orderBy('name');
-        if($request->filled('branch_id'))$query->where('branch_id',$request->branch_id);
+        if($request->filled('branch_id')){
+            $branchId=$request->integer('branch_id');
+            if(Branch::whereKey($branchId)->where('is_active',true)->exists())$query->where('branch_id',$branchId);
+        }
         $programs=$query->get();
         $branches=Branch::where('is_active',true)->orderByDesc('is_main')->orderBy('name')->get();
         return view('admin.programs.index',compact('programs','branches'));
@@ -28,7 +31,7 @@ class LearningProgramController extends Controller
     {
         abort_unless($request->user()->is_admin,403);
         $data=$request->validate([
-            'branch_id'=>['nullable','exists:branches,id'],
+            'branch_id'=>['nullable',Rule::exists('branches','id')->where('is_active',true)],
             'name'=>['required','string','max:100'],
             'slug'=>['nullable','string','max:100','regex:/^[a-z0-9-]+$/',Rule::unique('learning_programs','slug')],
             'card_text'=>['nullable','string','max:500'],
@@ -53,7 +56,7 @@ class LearningProgramController extends Controller
     {
         abort_unless($request->user()->is_admin,403);
         $data=$request->validate([
-            'branch_id'=>['nullable','exists:branches,id'],
+            'branch_id'=>['nullable',Rule::exists('branches','id')->where('is_active',true)],
             'name'=>['required','string','max:100'],
             'slug'=>['required','string','max:100','regex:/^[a-z0-9-]+$/',Rule::unique('learning_programs','slug')->ignore($program->id)],
             'card_text'=>['nullable','string','max:500'],
