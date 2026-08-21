@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
+use App\Models\Branch;
 use App\Models\Contact;
 use App\Models\ExamResult;
 use App\Models\FeePayment;
@@ -31,13 +32,25 @@ class DashboardController extends Controller
             abort(403, 'No management permissions have been assigned to this account.');
         }
 
+        $branchId = request()->filled('branch_id') ? request()->integer('branch_id') : null;
+        $branches = Branch::where('is_active', true)->orderByDesc('is_main')->orderBy('name')->get();
+        $selectedBranch = $branchId ? $branches->firstWhere('id', $branchId) : null;
+
+        $studentQuery = Student::query()->when($branchId, fn($q) => $q->where('branch_id', $branchId));
+        $studentCount = (clone $studentQuery)->count();
+        $activeStudentCount = (clone $studentQuery)->where('is_active', true)->count();
+
         $today = Carbon::today();
-        $todayAttendance = Attendance::whereDate('attendance_date', $today)->get();
+        $todayAttendance = Attendance::whereDate('attendance_date', $today)
+            ->when($branchId, fn($q) => $q->whereHas('student', fn($student) => $student->where('branch_id', $branchId)))
+            ->get();
         $todayPresent = $todayAttendance->where('status', 'Present')->count();
         $todayMarked = $todayAttendance->whereIn('status', ['Present','Absent'])->count();
         $todayAttendancePercentage = $todayMarked > 0 ? round(($todayPresent / $todayMarked) * 100, 1) : 0;
 
-        $payments = FeePayment::all();
+        $payments = FeePayment::with('student')
+            ->when($branchId, fn($q) => $q->whereHas('student', fn($student) => $student->where('branch_id', $branchId)))
+            ->get();
         $feeCollected = (float) $payments->sum(fn($p) => (float) $p->amount_paid);
         $studentTotals = $payments->groupBy('student_id')->map(function ($rows) {
             $latest = $rows->sortByDesc('id')->first();
@@ -47,21 +60,20 @@ class DashboardController extends Controller
         });
         $pendingFees = (float) $studentTotals->sum();
 
-        return view('admin.dashboard', [
-            'studentCount' => Student::count(),
-            'activeStudentCount' => Student::where('is_active', true)->count(),
-            'todayAttendancePercentage' => $todayAttendancePercentage,
-            'todayPresent' => $todayPresent,
-            'feeCollected' => $feeCollected,
-            'pendingFees' => $pendingFees,
-            'resultCount' => ExamResult::count(),
-            'homeworkCount' => Homework::count(),
-            'documentCount' => StudentDocument::count(),
-            'noticeCount' => Notice::count(),
-            'publishedNoticeCount' => Notice::where('status', true)->count(),
-            'galleryCount' => Gallery::count(),
-            'contactCount' => Contact::count(),
-            'recentContacts' => Contact::latest()->take(5)->get(),
-        ]);
+        $resultCount = ExamResult::when($branchId, fn($q) => $q->whereHas('student', fn($student) => $student->where('branch_id', $branchId)))->count();
+        $homeworkCount = Homework::when($branchId, fn($q) => $q->where('branch_id', $branchId))->count();
+        $documentCount = StudentDocument::when($branchId, fn($q) => $q->whereHas('student', fn($student) => $student->where('branch_id', $branchId)))->count();
+        $noticeCount = Notice::when($branchId, fn($q) => $q->where(function($n) use ($branchId) { $n->whereNull('branch_id')->orWhere('branch_id', $branchId); }))->count();
+        $publishedNoticeCount = Notice::where('status', true)->when($branchId, fn($q) => $q->where(function($n) use ($branchId) { $n->whereNull('branch_id')->orWhere('branch_id', $branchId); }))->count();
+        $galleryCount = Gallery::when($branchId, fn($q) => $q->where(function($g) use ($branchId) { $g->whereNull('branch_id')->orWhere('branch_id', $branchId); }))->count();
+        $contactQuery = Contact::with('branch')->when($branchId, fn($q) => $q->where('branch_id', $branchId));
+        $contactCount = (clone $contactQuery)->count();
+        $recentContacts = (clone $contactQuery)->latest()->take(5)->get();
+
+        return view('admin.dashboard', compact(
+            'branches','selectedBranch','branchId','studentCount','activeStudentCount','todayAttendancePercentage','todayPresent',
+            'feeCollected','pendingFees','resultCount','homeworkCount','documentCount','noticeCount','publishedNoticeCount',
+            'galleryCount','contactCount','recentContacts'
+        ));
     }
 }
