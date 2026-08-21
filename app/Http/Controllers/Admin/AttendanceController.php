@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
+use App\Models\Branch;
 use App\Models\Student;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,7 +18,11 @@ class AttendanceController extends Controller
 
         $date = $request->input('date', now()->format('Y-m-d'));
         $search = trim((string) $request->query('q', ''));
-        $query = Student::with('user')->where('is_active', true);
+        $query = Student::with(['user', 'branch'])->where('is_active', true);
+
+        if ($request->filled('branch_id')) {
+            $query->where('branch_id', $request->integer('branch_id'));
+        }
 
         if ($request->user()->isClassTeacher()) {
             $query->where('class_name', $request->user()->assigned_class);
@@ -37,8 +42,9 @@ class AttendanceController extends Controller
         $attendance = Attendance::whereDate('attendance_date', $date)
             ->whereIn('student_id', $students->pluck('id'))
             ->get()->keyBy('student_id');
+        $branches = Branch::where('is_active', true)->orderByDesc('is_main')->orderBy('name')->get();
 
-        return view('admin.attendance.index', compact('date', 'students', 'attendance', 'search'));
+        return view('admin.attendance.index', compact('date', 'students', 'attendance', 'search', 'branches'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -47,6 +53,7 @@ class AttendanceController extends Controller
 
         $data = $request->validate([
             'attendance_date' => ['required', 'date'],
+            'branch_id' => ['nullable', 'exists:branches,id'],
             'attendance' => ['required', 'array'],
             'attendance.*.status' => ['required', 'in:Present,Absent,Leave'],
             'attendance.*.remark' => ['nullable', 'string', 'max:255'],
@@ -54,6 +61,10 @@ class AttendanceController extends Controller
 
         foreach ($data['attendance'] as $studentId => $row) {
             $studentQuery = Student::whereKey($studentId)->where('is_active', true);
+
+            if (! empty($data['branch_id'])) {
+                $studentQuery->where('branch_id', $data['branch_id']);
+            }
 
             if ($request->user()->isClassTeacher()) {
                 $studentQuery->where('class_name', $request->user()->assigned_class);
@@ -70,7 +81,9 @@ class AttendanceController extends Controller
             );
         }
 
-        return redirect()->route('admin.attendance.index', ['date' => $data['attendance_date']])
-            ->with('success', 'Attendance saved successfully.');
+        return redirect()->route('admin.attendance.index', array_filter([
+            'date' => $data['attendance_date'],
+            'branch_id' => $data['branch_id'] ?? null,
+        ]))->with('success', 'Attendance saved successfully.');
     }
 }
