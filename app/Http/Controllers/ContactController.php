@@ -15,21 +15,25 @@ class ContactController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'branch_id' => ['required', 'exists:branches,id'],
+            'branch_id' => ['nullable', 'exists:branches,id'],
             'name' => ['required', 'string', 'max:255'],
             'mobile' => ['required', 'string', 'max:20'],
             'email' => ['nullable', 'email', 'max:255'],
             'message' => ['nullable', 'string', 'max:5000'],
         ]);
 
-        $contact = Contact::create($data);
+        if (empty($data['branch_id'])) {
+            $data['branch_id'] = Branch::where('is_main', true)->value('id') ?: Branch::where('is_active', true)->value('id');
+        }
+
+        Contact::create($data);
 
         if (!empty($data['email'])) {
             try {
                 $school = SchoolSetting::first();
-                $branch = Branch::find($data['branch_id']);
+                $branch = !empty($data['branch_id']) ? Branch::find($data['branch_id']) : null;
                 $schoolName = $school?->school_name ?: 'C-Net Pathshala';
-                $body = "Dear {$data['name']},\n\nWelcome to {$schoolName}. Thank you for contacting us regarding ".($branch?->name ?: 'our campus').". We have received your enquiry and our school team will get back to you soon.\n\nCampus Contact Details:\nPhone: ".($branch?->phone ?: ($school?->phone ?: '—'))."\nEmail: ".($branch?->email ?: ($school?->email ?: '—'))."\nAddress: ".($branch?->address ?: ($school?->address ?: '—'))."\n\nRegards,\n{$schoolName}";
+                $body = "Dear {$data['name']},\n\nWelcome to {$schoolName}. Thank you for contacting us regarding ".($branch?->name ?: 'our school').". We have received your enquiry and our school team will get back to you soon.\n\nCampus Contact Details:\nPhone: ".($branch?->phone ?: ($school?->phone ?: '—'))."\nEmail: ".($branch?->email ?: ($school?->email ?: '—'))."\nAddress: ".($branch?->address ?: ($school?->address ?: '—'))."\n\nRegards,\n{$schoolName}";
                 Mail::raw($body, function ($message) use ($data, $schoolName) {
                     $message->to($data['email'])->subject('Welcome to '.$schoolName.' - Enquiry Received');
                 });
