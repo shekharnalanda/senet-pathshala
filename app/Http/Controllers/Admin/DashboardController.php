@@ -32,9 +32,12 @@ class DashboardController extends Controller
             abort(403, 'No management permissions have been assigned to this account.');
         }
 
-        $branchId = request()->filled('branch_id') ? request()->integer('branch_id') : null;
         $branches = Branch::where('is_active', true)->orderByDesc('is_main')->orderBy('name')->get();
+        $branchId = request()->filled('branch_id') ? request()->integer('branch_id') : null;
         $selectedBranch = $branchId ? $branches->firstWhere('id', $branchId) : null;
+        if ($branchId && ! $selectedBranch) {
+            $branchId = null;
+        }
 
         $studentQuery = Student::query()->when($branchId, fn($q) => $q->where('branch_id', $branchId));
         $studentCount = (clone $studentQuery)->count();
@@ -61,7 +64,7 @@ class DashboardController extends Controller
         $pendingFees = (float) $studentTotals->sum();
 
         $resultCount = ExamResult::when($branchId, fn($q) => $q->whereHas('student', fn($student) => $student->where('branch_id', $branchId)))->count();
-        $homeworkCount = Homework::when($branchId, fn($q) => $q->where('branch_id', $branchId))->count();
+        $homeworkCount = Homework::when($branchId, fn($q) => $q->where(function($h) use ($branchId) { $h->whereNull('branch_id')->orWhere('branch_id', $branchId); }))->count();
         $documentCount = StudentDocument::when($branchId, fn($q) => $q->whereHas('student', fn($student) => $student->where('branch_id', $branchId)))->count();
         $noticeCount = Notice::when($branchId, fn($q) => $q->where(function($n) use ($branchId) { $n->whereNull('branch_id')->orWhere('branch_id', $branchId); }))->count();
         $publishedNoticeCount = Notice::where('status', true)->when($branchId, fn($q) => $q->where(function($n) use ($branchId) { $n->whereNull('branch_id')->orWhere('branch_id', $branchId); }))->count();
