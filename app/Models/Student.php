@@ -11,7 +11,7 @@ class Student extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id','admission_no','class_name','section','roll_no','date_of_birth','gender',
+        'user_id','branch_id','admission_no','class_name','section','roll_no','date_of_birth','gender',
         'father_name','mother_name','guardian_name','guardian_phone','address','photo','is_active',
     ];
 
@@ -20,5 +20,10 @@ class Student extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
     }
 }
