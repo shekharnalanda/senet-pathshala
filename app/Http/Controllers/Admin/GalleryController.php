@@ -12,6 +12,7 @@ class GalleryController extends Controller
 {
     public function index(Request $request)
     {
+        abort_unless($request->user()->is_admin, 403);
         $query = Gallery::with('branch')->latest();
         if ($request->filled('branch_id')) {
             $query->where('branch_id', $request->branch_id);
@@ -23,6 +24,7 @@ class GalleryController extends Controller
 
     public function store(Request $request)
     {
+        abort_unless($request->user()->is_admin, 403);
         $data = $request->validate([
             'branch_id' => ['nullable', 'exists:branches,id'],
             'title' => ['required', 'string', 'max:255'],
@@ -35,8 +37,9 @@ class GalleryController extends Controller
         return back()->with('success', 'Gallery image uploaded successfully.');
     }
 
-    public function destroy(Gallery $gallery)
+    public function destroy(Request $request, Gallery $gallery)
     {
+        abort_unless($request->user()->is_admin, 403);
         if ($gallery->image) {
             Storage::disk('public')->delete($gallery->image);
         }
