@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 
 class ContactController extends Controller
 {
@@ -22,8 +23,15 @@ class ContactController extends Controller
             'message' => ['nullable', 'string', 'max:5000'],
         ]);
 
-        if (empty($data['branch_id'])) {
-            $data['branch_id'] = Branch::where('is_main', true)->value('id') ?: Branch::where('is_active', true)->value('id');
+        if (!empty($data['branch_id'])) {
+            $branch = Branch::whereKey($data['branch_id'])->where('is_active', true)->first();
+            if (!$branch) {
+                throw ValidationException::withMessages(['branch_id' => 'The selected campus is not currently available for enquiries.']);
+            }
+        } else {
+            $branch = Branch::where('is_main', true)->where('is_active', true)->first()
+                ?: Branch::where('is_active', true)->orderByDesc('is_main')->orderBy('name')->first();
+            $data['branch_id'] = $branch?->id;
         }
 
         Contact::create($data);
@@ -31,7 +39,6 @@ class ContactController extends Controller
         if (!empty($data['email'])) {
             try {
                 $school = SchoolSetting::first();
-                $branch = !empty($data['branch_id']) ? Branch::find($data['branch_id']) : null;
                 $schoolName = $school?->school_name ?: 'C-Net Pathshala';
                 $body = "Dear {$data['name']},\n\nWelcome to {$schoolName}. Thank you for contacting us regarding ".($branch?->name ?: 'our school').". We have received your enquiry and our school team will get back to you soon.\n\nCampus Contact Details:\nPhone: ".($branch?->phone ?: ($school?->phone ?: '—'))."\nEmail: ".($branch?->email ?: ($school?->email ?: '—'))."\nAddress: ".($branch?->address ?: ($school?->address ?: '—'))."\n\nRegards,\n{$schoolName}";
                 Mail::raw($body, function ($message) use ($data, $schoolName) {
