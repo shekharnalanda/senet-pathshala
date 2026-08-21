@@ -9,6 +9,7 @@ use App\Models\SchoolClass;
 use App\Models\Student;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class AttendanceController extends Controller
@@ -21,15 +22,34 @@ class AttendanceController extends Controller
         $date = $request->input('date', now()->format('Y-m-d'));
         $search = trim((string) $request->query('q', ''));
         $selectedBranchId = $user->is_admin ? $request->integer('branch_id') : (int) $user->branch_id;
+        if ($user->is_admin && $selectedBranchId && ! Branch::whereKey($selectedBranchId)->where('is_active', true)->exists()) {
+            $selectedBranchId = 0;
+        }
         $selectedClass = $user->isClassTeacher() ? $user->assigned_class : trim((string) $request->query('class_name', ''));
         $selectedSection = $user->isClassTeacher() && $user->assigned_section ? $user->assigned_section : trim((string) $request->query('section', ''));
+
+        if ($selectedClass !== '') {
+            $classQuery = SchoolClass::where('is_active', true)->where('name', $selectedClass);
+            if ($selectedBranchId) {
+                $classQuery->where(function ($q) use ($selectedBranchId) {
+                    $q->whereNull('branch_id')->orWhere('branch_id', $selectedBranchId);
+                });
+            }
+            $selectedSchoolClass = $classQuery->first();
+            if (! $selectedSchoolClass) {
+                $selectedClass = '';
+                $selectedSection = '';
+            } elseif ($selectedSection !== '' && ! in_array($selectedSection, $selectedSchoolClass->section_list ?? [], true)) {
+                $selectedSection = '';
+            }
+        }
 
         $query = Student::with(['user', 'branch'])->where('is_active', true);
 
         if ($user->is_admin) {
             if ($selectedBranchId) $query->where('branch_id', $selectedBranchId);
         } else {
-            abort_unless($user->branch_id, 403, 'No campus is assigned to this staff account.');
+            abort_unless($user->branch_id && Branch::whereKey($user->branch_id)->where('is_active', true)->exists(), 403, 'No active campus is assigned to this staff account.');
             $query->where('branch_id', $user->branch_id);
         }
 
@@ -50,7 +70,7 @@ class AttendanceController extends Controller
 
         $branches = $user->is_admin
             ? Branch::where('is_active', true)->orderByDesc('is_main')->orderBy('name')->get()
-            : Branch::whereKey($user->branch_id)->get();
+            : Branch::whereKey($user->branch_id)->where('is_active', true)->get();
 
         if ($user->isClassTeacher()) {
             $classes = SchoolClass::where('is_active', true)
@@ -80,7 +100,7 @@ class AttendanceController extends Controller
         $user = $request->user();
         $data = $request->validate([
             'attendance_date' => ['required', 'date'],
-            'branch_id' => ['nullable', 'exists:branches,id'],
+            'branch_id' => ['nullable', Rule::exists('branches', 'id')->where(fn ($q) => $q->where('is_active', true))],
             'class_name' => ['nullable', 'string', 'max:100'],
             'section' => ['nullable', 'string', 'max:50'],
             'attendance' => ['required', 'array'],
@@ -89,8 +109,21 @@ class AttendanceController extends Controller
         ]);
 
         if (! $user->is_admin) {
-            abort_unless($user->branch_id, 403, 'No campus is assigned to this staff account.');
+            abort_unless($user->branch_id && Branch::whereKey($user->branch_id)->where('is_active', true)->exists(), 403, 'No active campus is assigned to this staff account.');
             $data['branch_id'] = $user->branch_id;
+        }
+
+        if (! empty($data['class_name'])) {
+            $class = SchoolClass::where('is_active', true)->where('name', $data['class_name'])
+                ->when(! empty($data['branch_id']), fn ($q) => $q->where(function ($x) use ($data) {
+                    $x->whereNull('branch_id')->orWhere('branch_id', $data['branch_id']);
+                }))->first();
+            abort_unless($class, 422, 'Selected class is not available for this campus.');
+            if (! empty($data['section'])) {
+                abort_unless(in_array($data['section'], $class->section_list ?? [], true), 422, 'Selected section is not available for this class.');
+            }
+        } elseif (! empty($data['section'])) {
+            abort(422, 'Please select a class before selecting a section.');
         }
 
         foreach ($data['attendance'] as $studentId => $row) {
