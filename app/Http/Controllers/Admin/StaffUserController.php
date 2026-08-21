@@ -32,12 +32,19 @@ class StaffUserController extends Controller
     }
     private function validated(Request $request,?User $user=null): array
     {
-        return $request->validate([
+        $data=$request->validate([
             'branch_id'=>['required','exists:branches,id'],
             'name'=>['required','string','max:255'],'email'=>['required','email','max:255',Rule::unique('users','email')->ignore($user?->id)],
             'password'=>[$user?'nullable':'required','string','min:6'],'role'=>['required','in:class_teacher,office_manager,principal'],
             'assigned_class'=>['nullable','string','max:100'],'assigned_section'=>['nullable','string','max:50'],
             'permissions'=>['nullable','array'],'permissions.*'=>['in:attendance,homework,students,results,report_cards,certificates,fees'],
         ]);
+        if(($data['role']??'')==='class_teacher'){
+            if(empty($data['assigned_class']))abort(422,'Assigned Class is required for Class Teacher.');
+            $class=SchoolClass::where('is_active',true)->where('name',$data['assigned_class'])->where(function($q)use($data){$q->whereNull('branch_id')->orWhere('branch_id',$data['branch_id']);})->first();
+            abort_unless($class,422,'Selected class is not available for the selected campus.');
+            if(!empty($data['assigned_section'])&&!in_array($data['assigned_section'],$class->section_list,true))abort(422,'Selected section is not available for the selected class.');
+        }
+        return $data;
     }
 }
