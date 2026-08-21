@@ -7,6 +7,7 @@ use App\Models\Branch;
 use App\Models\Gallery;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class GalleryController extends Controller
 {
@@ -15,7 +16,10 @@ class GalleryController extends Controller
         abort_unless($request->user()->is_admin, 403);
         $query = Gallery::with('branch')->latest();
         if ($request->filled('branch_id')) {
-            $query->where('branch_id', $request->branch_id);
+            $branchId = $request->integer('branch_id');
+            if (Branch::whereKey($branchId)->where('is_active', true)->exists()) {
+                $query->where('branch_id', $branchId);
+            }
         }
         $galleries = $query->paginate(20)->withQueryString();
         $branches = Branch::where('is_active', true)->orderByDesc('is_main')->orderBy('name')->get();
@@ -26,7 +30,7 @@ class GalleryController extends Controller
     {
         abort_unless($request->user()->is_admin, 403);
         $data = $request->validate([
-            'branch_id' => ['nullable', 'exists:branches,id'],
+            'branch_id' => ['nullable', Rule::exists('branches', 'id')->where('is_active', true)],
             'title' => ['required', 'string', 'max:255'],
             'image' => ['required', 'image', 'max:4096'],
         ]);
