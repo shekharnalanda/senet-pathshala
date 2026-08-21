@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\SchoolClass;
+use App\Models\SchoolSetting;
 use App\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -71,6 +72,8 @@ class StudentIdCardController extends Controller
         abort_unless($found->count() === 2, 422, 'Please select exactly two active students.');
 
         $students = collect($selectedIds)->map(fn ($id) => $found->get($id));
-        return view('admin.student-id-cards.print', compact('students'));
+        $settings = SchoolSetting::first();
+
+        return view('admin.student-id-cards.print', compact('students', 'settings'));
     }
 }
