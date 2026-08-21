@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Branch;
 use App\Models\Homework;
 use App\Models\Student;
 use Illuminate\Http\RedirectResponse;
@@ -15,7 +16,12 @@ class HomeworkController extends Controller
     {
         abort_unless($request->user()->hasPermission('homework'), 403);
         $user = $request->user();
-        $query = Homework::query();
+        $query = Homework::with('branch');
+
+        if ($request->filled('branch_id')) {
+            $query->where('branch_id', $request->integer('branch_id'));
+        }
+
         if ($user->isClassTeacher()) {
             $query->where('class_name', $user->assigned_class);
             if ($user->assigned_section) $query->where('section', $user->assigned_section);
@@ -24,14 +30,17 @@ class HomeworkController extends Controller
             $classes = Student::whereNotNull('class_name')->where('class_name', '<>', '')
                 ->select('class_name')->distinct()->orderBy('class_name')->pluck('class_name');
         }
+
+        $branches = Branch::where('is_active', true)->orderByDesc('is_main')->orderBy('name')->get();
         $homeworks = $query->latest('homework_date')->latest('id')->get();
-        return view('admin.homework.index', compact('homeworks', 'classes'));
+        return view('admin.homework.index', compact('homeworks', 'classes', 'branches'));
     }
 
     public function store(Request $request): RedirectResponse
     {
         abort_unless($request->user()->hasPermission('homework'), 403);
         $data = $request->validate([
+            'branch_id' => ['required', 'exists:branches,id'],
             'class_name' => ['required', 'string', 'max:100'],
             'section' => ['nullable', 'string', 'max:50'],
             'subject' => ['required', 'string', 'max:150'],
