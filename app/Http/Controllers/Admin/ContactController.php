@@ -13,6 +13,7 @@ class ContactController extends Controller
 {
     public function index(Request $request)
     {
+        abort_unless($request->user()->is_admin, 403);
         $query = Contact::with('branch')->latest();
         if ($request->filled('branch_id')) {
             $query->where('branch_id', $request->branch_id);
@@ -24,6 +25,7 @@ class ContactController extends Controller
 
     public function reply(Request $request, Contact $contact)
     {
+        abort_unless($request->user()->is_admin, 403);
         abort_if(empty($contact->email), 422, 'This enquiry does not have an email address.');
         $contact->load('branch');
         $data = $request->validate(['reply_message' => ['required','string','max:5000']]);
@@ -40,8 +42,9 @@ class ContactController extends Controller
         return back()->with('success', 'Reply email sent successfully to '.$contact->email.'.');
     }
 
-    public function destroy(Contact $contact)
+    public function destroy(Request $request, Contact $contact)
     {
+        abort_unless($request->user()->is_admin, 403);
         $contact->delete();
         return back()->with('success', 'Enquiry deleted successfully.');
     }
