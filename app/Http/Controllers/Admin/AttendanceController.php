@@ -16,18 +16,24 @@ class AttendanceController extends Controller
     {
         abort_unless($request->user()->hasPermission('attendance'), 403);
 
+        $user = $request->user();
         $date = $request->input('date', now()->format('Y-m-d'));
         $search = trim((string) $request->query('q', ''));
         $query = Student::with(['user', 'branch'])->where('is_active', true);
 
-        if ($request->filled('branch_id')) {
-            $query->where('branch_id', $request->integer('branch_id'));
+        if ($user->is_admin) {
+            if ($request->filled('branch_id')) {
+                $query->where('branch_id', $request->integer('branch_id'));
+            }
+        } else {
+            abort_unless($user->branch_id, 403, 'No campus is assigned to this staff account.');
+            $query->where('branch_id', $user->branch_id);
         }
 
-        if ($request->user()->isClassTeacher()) {
-            $query->where('class_name', $request->user()->assigned_class);
-            if ($request->user()->assigned_section) {
-                $query->where('section', $request->user()->assigned_section);
+        if ($user->isClassTeacher()) {
+            $query->where('class_name', $user->assigned_class);
+            if ($user->assigned_section) {
+                $query->where('section', $user->assigned_section);
             }
         }
 
@@ -42,7 +48,9 @@ class AttendanceController extends Controller
         $attendance = Attendance::whereDate('attendance_date', $date)
             ->whereIn('student_id', $students->pluck('id'))
             ->get()->keyBy('student_id');
-        $branches = Branch::where('is_active', true)->orderByDesc('is_main')->orderBy('name')->get();
+        $branches = $user->is_admin
+            ? Branch::where('is_active', true)->orderByDesc('is_main')->orderBy('name')->get()
+            : Branch::whereKey($user->branch_id)->get();
 
         return view('admin.attendance.index', compact('date', 'students', 'attendance', 'search', 'branches'));
     }
@@ -51,6 +59,7 @@ class AttendanceController extends Controller
     {
         abort_unless($request->user()->hasPermission('attendance'), 403);
 
+        $user = $request->user();
         $data = $request->validate([
             'attendance_date' => ['required', 'date'],
             'branch_id' => ['nullable', 'exists:branches,id'],
@@ -59,6 +68,11 @@ class AttendanceController extends Controller
             'attendance.*.remark' => ['nullable', 'string', 'max:255'],
         ]);
 
+        if (! $user->is_admin) {
+            abort_unless($user->branch_id, 403, 'No campus is assigned to this staff account.');
+            $data['branch_id'] = $user->branch_id;
+        }
+
         foreach ($data['attendance'] as $studentId => $row) {
             $studentQuery = Student::whereKey($studentId)->where('is_active', true);
 
@@ -66,10 +80,10 @@ class AttendanceController extends Controller
                 $studentQuery->where('branch_id', $data['branch_id']);
             }
 
-            if ($request->user()->isClassTeacher()) {
-                $studentQuery->where('class_name', $request->user()->assigned_class);
-                if ($request->user()->assigned_section) {
-                    $studentQuery->where('section', $request->user()->assigned_section);
+            if ($user->isClassTeacher()) {
+                $studentQuery->where('class_name', $user->assigned_class);
+                if ($user->assigned_section) {
+                    $studentQuery->where('section', $user->assigned_section);
                 }
             }
 
@@ -83,7 +97,7 @@ class AttendanceController extends Controller
 
         return redirect()->route('admin.attendance.index', array_filter([
             'date' => $data['attendance_date'],
-            'branch_id' => $data['branch_id'] ?? null,
+            'branch_id' => $user->is_admin ? ($data['branch_id'] ?? null) : null,
         ]))->with('success', 'Attendance saved successfully.');
     }
 }
