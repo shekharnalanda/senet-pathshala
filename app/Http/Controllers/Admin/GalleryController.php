@@ -3,21 +3,28 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Branch;
 use App\Models\Gallery;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class GalleryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $galleries = Gallery::latest()->paginate(20);
-        return view('admin.gallery.index', compact('galleries'));
+        $query = Gallery::with('branch')->latest();
+        if ($request->filled('branch_id')) {
+            $query->where('branch_id', $request->branch_id);
+        }
+        $galleries = $query->paginate(20)->withQueryString();
+        $branches = Branch::where('is_active', true)->orderByDesc('is_main')->orderBy('name')->get();
+        return view('admin.gallery.index', compact('galleries', 'branches'));
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
+            'branch_id' => ['nullable', 'exists:branches,id'],
             'title' => ['required', 'string', 'max:255'],
             'image' => ['required', 'image', 'max:4096'],
         ]);
