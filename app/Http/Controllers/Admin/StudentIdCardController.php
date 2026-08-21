@@ -12,17 +12,22 @@ class StudentIdCardController extends Controller
 {
     public function index(Request $request): View
     {
+        $user = $request->user();
         $search = trim((string) $request->query('q', ''));
         $query = Student::with(['user', 'branch'])->where('is_active', true);
 
-        if ($request->user()->isClassTeacher()) {
-            $query->where('class_name', $request->user()->assigned_class);
-            if ($request->user()->assigned_section) {
-                $query->where('section', $request->user()->assigned_section);
+        if (! $user->is_admin && $user->branch_id) {
+            $query->where('branch_id', $user->branch_id);
+        }
+
+        if ($user->isClassTeacher()) {
+            $query->where('class_name', $user->assigned_class);
+            if ($user->assigned_section) {
+                $query->where('section', $user->assigned_section);
             }
         }
 
-        if ($request->filled('branch_id')) {
+        if ($user->is_admin && $request->filled('branch_id')) {
             $query->where('branch_id', $request->integer('branch_id'));
         }
 
@@ -38,16 +43,16 @@ class StudentIdCardController extends Controller
             ->orderBy('roll_no')
             ->get();
 
-        $branches = Branch::where('is_active', true)
-            ->orderByDesc('is_main')
-            ->orderBy('name')
-            ->get();
+        $branches = $user->is_admin
+            ? Branch::where('is_active', true)->orderByDesc('is_main')->orderBy('name')->get()
+            : Branch::whereKey($user->branch_id)->get();
 
         return view('admin.student-id-cards.index', compact('students', 'branches', 'search'));
     }
 
     public function print(Request $request): View
     {
+        $user = $request->user();
         $data = $request->validate([
             'students' => ['required', 'array', 'size:2'],
             'students.*' => ['required', 'integer', 'distinct', 'exists:students,id'],
@@ -57,10 +62,17 @@ class StudentIdCardController extends Controller
         $found = Student::with(['user', 'branch'])
             ->where('is_active', true)
             ->whereIn('id', $selectedIds)
+            ->when(! $user->is_admin && $user->branch_id, fn ($query) => $query->where('branch_id', $user->branch_id))
+            ->when($user->isClassTeacher(), function ($query) use ($user) {
+                $query->where('class_name', $user->assigned_class);
+                if ($user->assigned_section) {
+                    $query->where('section', $user->assigned_section);
+                }
+            })
             ->get()
             ->keyBy('id');
 
-        abort_unless($found->count() === 2, 422, 'Please select two active students.');
+        abort_unless($found->count() === 2, 422, 'Please select two active students from your assigned campus.');
 
         $students = collect($selectedIds)->map(fn ($id) => $found->get($id));
 
