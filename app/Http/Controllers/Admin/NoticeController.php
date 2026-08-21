@@ -11,6 +11,7 @@ class NoticeController extends Controller
 {
     public function index(Request $request)
     {
+        abort_unless($request->user()->is_admin, 403);
         $query = Notice::with('branch')->latest('notice_date');
         if ($request->filled('branch_id')) {
             $query->where('branch_id', $request->integer('branch_id'));
@@ -22,6 +23,7 @@ class NoticeController extends Controller
 
     public function store(Request $request)
     {
+        abort_unless($request->user()->is_admin, 403);
         $data = $request->validate([
             'branch_id' => ['nullable', 'exists:branches,id'],
             'title' => ['required', 'string', 'max:255'],
@@ -37,6 +39,7 @@ class NoticeController extends Controller
 
     public function update(Request $request, Notice $notice)
     {
+        abort_unless($request->user()->is_admin, 403);
         $data = $request->validate([
             'branch_id' => ['nullable', 'exists:branches,id'],
             'title' => ['required', 'string', 'max:255'],
@@ -50,8 +53,9 @@ class NoticeController extends Controller
         return back()->with('success', 'Notice updated successfully.');
     }
 
-    public function destroy(Notice $notice)
+    public function destroy(Request $request, Notice $notice)
     {
+        abort_unless($request->user()->is_admin, 403);
         $notice->delete();
         return back()->with('success', 'Notice deleted successfully.');
     }
