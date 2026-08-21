@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Branch;
 use App\Models\LearningProgram;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,14 +17,18 @@ class LearningProgramController extends Controller
     public function index(Request $request): View
     {
         abort_unless($request->user()->is_admin,403);
-        $programs=LearningProgram::orderBy('sort_order')->orderBy('name')->get();
-        return view('admin.programs.index',compact('programs'));
+        $query=LearningProgram::with('branch')->orderBy('sort_order')->orderBy('name');
+        if($request->filled('branch_id'))$query->where('branch_id',$request->branch_id);
+        $programs=$query->get();
+        $branches=Branch::where('is_active',true)->orderByDesc('is_main')->orderBy('name')->get();
+        return view('admin.programs.index',compact('programs','branches'));
     }
 
     public function store(Request $request): RedirectResponse
     {
         abort_unless($request->user()->is_admin,403);
         $data=$request->validate([
+            'branch_id'=>['nullable','exists:branches,id'],
             'name'=>['required','string','max:100'],
             'slug'=>['nullable','string','max:100','regex:/^[a-z0-9-]+$/',Rule::unique('learning_programs','slug')],
             'card_text'=>['nullable','string','max:500'],
@@ -48,6 +53,7 @@ class LearningProgramController extends Controller
     {
         abort_unless($request->user()->is_admin,403);
         $data=$request->validate([
+            'branch_id'=>['nullable','exists:branches,id'],
             'name'=>['required','string','max:100'],
             'slug'=>['required','string','max:100','regex:/^[a-z0-9-]+$/',Rule::unique('learning_programs','slug')->ignore($program->id)],
             'card_text'=>['nullable','string','max:500'],
