@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\Homework;
-use App\Models\Student;
+use App\Models\SchoolClass;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -27,13 +27,18 @@ class HomeworkController extends Controller
         if ($user->isClassTeacher()) {
             $query->where('class_name', $user->assigned_class);
             if ($user->assigned_section) $query->where('section', $user->assigned_section);
-            $classes = collect([$user->assigned_class]);
+            $classes = SchoolClass::where('is_active', true)
+                ->where('name', $user->assigned_class)
+                ->where(function ($q) use ($user) {
+                    $q->whereNull('branch_id')->orWhere('branch_id', $user->branch_id);
+                })->get();
         } else {
-            $classQuery = Student::whereNotNull('class_name')->where('class_name', '<>', '');
-            if (! $user->is_admin && $user->branch_id) {
-                $classQuery->where('branch_id', $user->branch_id);
-            }
-            $classes = $classQuery->select('class_name')->distinct()->orderBy('class_name')->pluck('class_name');
+            $classBranchId = $user->is_admin ? $request->integer('branch_id') : $user->branch_id;
+            $classes = SchoolClass::where('is_active', true)
+                ->when($classBranchId, fn ($q) => $q->where(function ($x) use ($classBranchId) {
+                    $x->whereNull('branch_id')->orWhere('branch_id', $classBranchId);
+                }))
+                ->orderBy('sort_order')->orderBy('name')->get();
         }
 
         $branches = Branch::where('is_active', true)
@@ -66,6 +71,17 @@ class HomeworkController extends Controller
             if ($user->assigned_section) {
                 abort_unless(($data['section'] ?? null) === $user->assigned_section, 403);
             }
+        }
+
+        $class = SchoolClass::where('name', $data['class_name'])
+            ->where('is_active', true)
+            ->where(function ($q) use ($data) {
+                $q->whereNull('branch_id')->orWhere('branch_id', $data['branch_id']);
+            })->first();
+        abort_unless($class, 422, 'Selected class is not available for this campus.');
+
+        if (! empty($data['section']) && ! empty($class->section_list)) {
+            abort_unless(in_array($data['section'], $class->section_list, true), 422, 'Selected section is not available for this class.');
         }
 
         Homework::create($data);
