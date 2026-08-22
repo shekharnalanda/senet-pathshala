@@ -21,6 +21,37 @@ class StudentIdCardController extends Controller
         $className = trim((string) $request->query('class_name', ''));
         $section = trim((string) $request->query('section', ''));
 
+        if ($branchId && ! Branch::whereKey($branchId)->where('is_active', true)->exists()) {
+            $branchId = null;
+            $className = '';
+            $section = '';
+        }
+
+        $classes = SchoolClass::where('is_active', true)
+            ->when($branchId, fn ($q) => $q->where(function ($x) use ($branchId) {
+                $x->whereNull('branch_id')->orWhere('branch_id', $branchId);
+            }))
+            ->orderBy('sort_order')->orderBy('name')->get();
+
+        $sections = collect();
+        if ($className !== '') {
+            $matchingClasses = $classes->where('name', $className);
+            if ($matchingClasses->isEmpty()) {
+                $className = '';
+                $section = '';
+            } else {
+                $sections = $matchingClasses
+                    ->flatMap(fn ($class) => $class->section_list ?? [])
+                    ->filter()->unique()->sort()->values();
+
+                if ($section !== '' && ! $sections->contains($section)) {
+                    $section = '';
+                }
+            }
+        } elseif ($section !== '') {
+            $section = '';
+        }
+
         $query = Student::with(['user', 'branch'])->where('is_active', true)
             ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
             ->when($className !== '', fn ($q) => $q->where('class_name', $className))
@@ -35,18 +66,6 @@ class StudentIdCardController extends Controller
 
         $students = $query->orderBy('class_name')->orderBy('section')->orderBy('roll_no')->get();
         $branches = Branch::where('is_active', true)->orderByDesc('is_main')->orderBy('name')->get();
-        $classes = SchoolClass::where('is_active', true)
-            ->when($branchId, fn ($q) => $q->where(function ($x) use ($branchId) {
-                $x->whereNull('branch_id')->orWhere('branch_id', $branchId);
-            }))
-            ->orderBy('sort_order')->orderBy('name')->get();
-
-        $sections = collect();
-        if ($className !== '') {
-            $sections = $classes->where('name', $className)
-                ->flatMap(fn ($class) => $class->section_list ?? [])
-                ->filter()->unique()->sort()->values();
-        }
 
         return view('admin.student-id-cards.index', compact(
             'students', 'branches', 'classes', 'sections', 'search', 'branchId', 'className', 'section'
@@ -65,11 +84,13 @@ class StudentIdCardController extends Controller
         $selectedIds = $data['students'];
         $found = Student::with(['user', 'branch'])
             ->where('is_active', true)
+            ->whereNotNull('branch_id')
+            ->whereHas('branch', fn ($q) => $q->where('is_active', true))
             ->whereIn('id', $selectedIds)
             ->get()
             ->keyBy('id');
 
-        abort_unless($found->count() === 2, 422, 'Please select exactly two active students.');
+        abort_unless($found->count() === 2, 422, 'Please select exactly two active students assigned to an active campus.');
 
         $students = collect($selectedIds)->map(fn ($id) => $found->get($id));
         $settings = SchoolSetting::first();
