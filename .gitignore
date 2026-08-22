@@ -8,6 +8,8 @@
 !.env.example
 .phpunit.result.cache
 .php-cs-fixer.cache
+composer-setup.php
+composer.phar
 Homestead.json
 Homestead.yaml
 npm-debug.log
