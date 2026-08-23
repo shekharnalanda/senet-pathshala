@@ -17,12 +17,19 @@ class HomeworkController extends Controller
     {
         abort_unless($request->user()->hasPermission('homework'), 403);
         $user = $request->user();
-        $query = Homework::with('branch');
+        $this->requireActiveStaffCampus($user);
 
-        if (! $user->is_admin && $user->branch_id) {
-            $query->where('branch_id', $user->branch_id);
-        } elseif ($request->filled('branch_id') && Branch::where('is_active', true)->whereKey($request->integer('branch_id'))->exists()) {
-            $query->where('branch_id', $request->integer('branch_id'));
+        $selectedBranchId = $user->is_admin && $request->filled('branch_id')
+            ? $request->integer('branch_id')
+            : ($user->is_admin ? null : (int) $user->branch_id);
+
+        if ($user->is_admin && $selectedBranchId && ! Branch::whereKey($selectedBranchId)->where('is_active', true)->exists()) {
+            $selectedBranchId = null;
+        }
+
+        $query = Homework::with('branch');
+        if ($selectedBranchId) {
+            $query->where('branch_id', $selectedBranchId);
         }
 
         if ($user->isClassTeacher()) {
@@ -35,15 +42,16 @@ class HomeworkController extends Controller
                 })->orderBy('sort_order')->orderBy('name')->get();
         } else {
             $classes = SchoolClass::where('is_active', true)
-                ->when(! $user->is_admin && $user->branch_id, fn ($q) => $q->where(function ($x) use ($user) {
-                    $x->whereNull('branch_id')->orWhere('branch_id', $user->branch_id);
+                ->when($selectedBranchId, fn ($q) => $q->where(function ($x) use ($selectedBranchId) {
+                    $x->whereNull('branch_id')->orWhere('branch_id', $selectedBranchId);
                 }))
                 ->orderBy('sort_order')->orderBy('name')->get();
         }
 
-        $branches = Branch::where('is_active', true)
-            ->when(! $user->is_admin && $user->branch_id, fn ($q) => $q->whereKey($user->branch_id))
-            ->orderByDesc('is_main')->orderBy('name')->get();
+        $branches = $user->is_admin
+            ? Branch::where('is_active', true)->orderByDesc('is_main')->orderBy('name')->get()
+            : Branch::whereKey($user->branch_id)->where('is_active', true)->get();
+
         $homeworks = $query->latest('homework_date')->latest('id')->get();
 
         return view('admin.homework.index', compact('homeworks', 'classes', 'branches'));
@@ -52,6 +60,9 @@ class HomeworkController extends Controller
     public function store(Request $request): RedirectResponse
     {
         abort_unless($request->user()->hasPermission('homework'), 403);
+        $user = $request->user();
+        $this->requireActiveStaffCampus($user);
+
         $data = $request->validate([
             'branch_id' => ['required', Rule::exists('branches', 'id')->where('is_active', true)],
             'class_name' => ['required', 'string', 'max:100'],
@@ -62,10 +73,11 @@ class HomeworkController extends Controller
             'details' => ['required', 'string', 'max:5000'],
         ]);
 
-        $user = $request->user();
-        if (! $user->is_admin && $user->branch_id) {
+        if (! $user->is_admin) {
             abort_unless((int) $data['branch_id'] === (int) $user->branch_id, 403);
+            $data['branch_id'] = $user->branch_id;
         }
+
         if ($user->isClassTeacher()) {
             abort_unless($data['class_name'] === $user->assigned_class, 403);
             if ($user->assigned_section) {
@@ -92,8 +104,9 @@ class HomeworkController extends Controller
     {
         abort_unless($request->user()->hasPermission('homework'), 403);
         $user = $request->user();
+        $this->requireActiveStaffCampus($user);
 
-        if (! $user->is_admin && $user->branch_id) {
+        if (! $user->is_admin) {
             abort_unless((int) $homework->branch_id === (int) $user->branch_id, 403);
         }
         if ($user->isClassTeacher()) {
@@ -102,5 +115,16 @@ class HomeworkController extends Controller
 
         $homework->delete();
         return back()->with('success', 'Homework deleted successfully.');
+    }
+
+    private function requireActiveStaffCampus($user): void
+    {
+        if (! $user->is_admin) {
+            abort_unless(
+                $user->branch_id && Branch::whereKey($user->branch_id)->where('is_active', true)->exists(),
+                403,
+                'No active campus is assigned to this staff account.'
+            );
+        }
     }
 }
