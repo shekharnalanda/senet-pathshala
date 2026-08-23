@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\AdmissionApplication;
 use App\Models\Branch;
+use App\Models\ExamResult;
 use App\Models\FeePayment;
 use App\Models\SchoolClass;
 use App\Models\Student;
@@ -18,14 +19,7 @@ class CriticalFlowsTest extends TestCase
     public function test_public_admission_page_renders_with_active_campus_and_class(): void
     {
         $branch = $this->makeBranch('Main Campus', 'MAIN', true);
-
-        SchoolClass::create([
-            'branch_id' => $branch->id,
-            'name' => 'Class 1',
-            'sections' => 'A,B',
-            'sort_order' => 1,
-            'is_active' => true,
-        ]);
+        $this->makeClass($branch);
 
         $this->get(route('admission', ['branch_id' => $branch->id]))
             ->assertOk()
@@ -161,6 +155,59 @@ class CriticalFlowsTest extends TestCase
             ->assertStatus(422);
     }
 
+    public function test_homework_staff_without_active_campus_is_rejected(): void
+    {
+        $staff = User::create([
+            'name' => 'Unassigned Homework Staff',
+            'email' => 'homework.unassigned@example.test',
+            'password' => 'password',
+            'is_admin' => false,
+            'role' => 'office_manager',
+            'permissions' => ['homework'],
+        ]);
+
+        $this->actingAs($staff)
+            ->get(route('admin.homework.index'))
+            ->assertForbidden();
+    }
+
+    public function test_report_card_staff_cannot_open_other_campus_student(): void
+    {
+        $main = $this->makeBranch('Main Campus', 'MAIN', true);
+        $second = $this->makeBranch('Second Campus', 'SECOND', true);
+        $staff = $this->makeStaff($main, ['report_cards']);
+        $otherStudent = $this->makeStudent($second, 'Other Result Student', 'OTHER-RESULT-001');
+
+        ExamResult::create([
+            'student_id' => $otherStudent->id,
+            'exam_name' => 'Annual Exam',
+            'subject' => 'English',
+            'max_marks' => 100,
+            'marks_obtained' => 80,
+            'exam_date' => '2026-08-23',
+        ]);
+
+        $this->actingAs($staff)
+            ->get(route('admin.results.report-card', [$otherStudent, 'Annual Exam']))
+            ->assertForbidden();
+    }
+
+    public function test_certificate_staff_cannot_generate_for_other_campus_student(): void
+    {
+        $main = $this->makeBranch('Main Campus', 'MAIN', true);
+        $second = $this->makeBranch('Second Campus', 'SECOND', true);
+        $staff = $this->makeStaff($main, ['certificates']);
+        $otherStudent = $this->makeStudent($second, 'Other Certificate Student', 'OTHER-CERT-001');
+
+        $this->actingAs($staff)
+            ->post(route('admin.documents.generate'), [
+                'student_id' => $otherStudent->id,
+                'certificate_type' => 'bonafide',
+                'purpose' => 'Testing',
+            ])
+            ->assertForbidden();
+    }
+
     private function makeAdmin(): User
     {
         return User::create([
@@ -181,6 +228,17 @@ class CriticalFlowsTest extends TestCase
             'email' => strtolower($code).'@example.test',
             'is_main' => $code === 'MAIN',
             'is_active' => $active,
+        ]);
+    }
+
+    private function makeClass(Branch $branch): SchoolClass
+    {
+        return SchoolClass::create([
+            'branch_id' => $branch->id,
+            'name' => 'Class 1',
+            'sections' => 'A,B',
+            'sort_order' => 1,
+            'is_active' => true,
         ]);
     }
 
