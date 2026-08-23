@@ -36,13 +36,7 @@ class CriticalFlowsTest extends TestCase
 
     public function test_admin_can_open_admission_application_detail_page(): void
     {
-        $admin = User::create([
-            'name' => 'Admin',
-            'email' => 'admin@example.test',
-            'password' => 'password',
-            'is_admin' => true,
-        ]);
-
+        $admin = $this->makeAdmin();
         $branch = $this->makeBranch('Main Campus', 'MAIN', true);
 
         $application = AdmissionApplication::create([
@@ -135,6 +129,46 @@ class CriticalFlowsTest extends TestCase
         $this->actingAs($staff)
             ->get(route('admin.fees.receipt', $payment))
             ->assertForbidden();
+    }
+
+    public function test_id_card_list_respects_selected_campus(): void
+    {
+        $admin = $this->makeAdmin();
+        $main = $this->makeBranch('Main Campus', 'MAIN', true);
+        $second = $this->makeBranch('Second Campus', 'SECOND', true);
+        $ownStudent = $this->makeStudent($main, 'Main ID Student', 'ID-MAIN-001');
+        $otherStudent = $this->makeStudent($second, 'Second ID Student', 'ID-SECOND-001');
+
+        $this->actingAs($admin)
+            ->get(route('admin.student-id-cards.index', ['branch_id' => $main->id]))
+            ->assertOk()
+            ->assertSee($ownStudent->user->name)
+            ->assertDontSee($otherStudent->user->name);
+    }
+
+    public function test_id_card_print_rejects_student_from_inactive_campus(): void
+    {
+        $admin = $this->makeAdmin();
+        $active = $this->makeBranch('Main Campus', 'MAIN', true);
+        $inactive = $this->makeBranch('Inactive Campus', 'OLD', false);
+        $activeStudent = $this->makeStudent($active, 'Active ID Student', 'ID-ACTIVE-001');
+        $inactiveStudent = $this->makeStudent($inactive, 'Inactive ID Student', 'ID-INACTIVE-001');
+
+        $this->actingAs($admin)
+            ->post(route('admin.student-id-cards.print'), [
+                'students' => [$activeStudent->id, $inactiveStudent->id],
+            ])
+            ->assertStatus(422);
+    }
+
+    private function makeAdmin(): User
+    {
+        return User::create([
+            'name' => 'Admin',
+            'email' => 'admin.'.uniqid().'@example.test',
+            'password' => 'password',
+            'is_admin' => true,
+        ]);
     }
 
     private function makeBranch(string $name, string $code, bool $active): Branch
