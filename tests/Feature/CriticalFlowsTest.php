@@ -208,6 +208,31 @@ class CriticalFlowsTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_admin_dashboard_excludes_students_from_inactive_campuses(): void
+    {
+        $admin = $this->makeAdmin();
+        $active = $this->makeBranch('Main Campus', 'MAIN', true);
+        $inactive = $this->makeBranch('Old Campus', 'OLD2', false);
+        $this->makeStudent($active, 'Active Dashboard Student', 'DASH-ACTIVE-001');
+        $this->makeStudent($inactive, 'Inactive Dashboard Student', 'DASH-OLD-001');
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertViewHas('studentCount', 1)
+            ->assertViewHas('activeStudentCount', 1);
+    }
+
+    public function test_staff_dashboard_rejects_inactive_assigned_campus(): void
+    {
+        $inactive = $this->makeBranch('Inactive Staff Campus', 'STAFFOLD', false);
+        $staff = $this->makeStaff($inactive, ['students']);
+
+        $this->actingAs($staff)
+            ->get(route('admin.dashboard'))
+            ->assertForbidden();
+    }
+
     private function makeAdmin(): User
     {
         return User::create([
