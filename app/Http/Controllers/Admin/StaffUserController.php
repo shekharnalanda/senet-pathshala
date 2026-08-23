@@ -3,6 +3,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;use App\Models\Branch;use App\Models\SchoolClass;use App\Models\User;use Illuminate\Http\RedirectResponse;use Illuminate\Http\Request;use Illuminate\Support\Facades\Hash;use Illuminate\Validation\Rule;use Illuminate\View\View;
 class StaffUserController extends Controller
 {
+    private const PERMISSIONS=['attendance','homework','students','results','report_cards','certificates','fees'];
     public function index(Request $request): View
     {
         abort_unless($request->user()?->is_admin,403);
@@ -14,16 +15,14 @@ class StaffUserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         abort_unless($request->user()?->is_admin,403);
-        $data=$this->validated($request);
+        $data=$this->validated($request);$data=$this->normalize($data);
         $data['password']=Hash::make($data['password']);$data['is_admin']=false;
-        if(($data['role']??'')!=='class_teacher'){$data['assigned_class']=null;$data['assigned_section']=null;}
         User::create($data);return back()->with('success','Staff user created successfully.');
     }
     public function update(Request $request,User $staffUser): RedirectResponse
     {
         abort_unless($request->user()?->is_admin,403);abort_unless($staffUser->isStaff(),404);
-        $data=$this->validated($request,$staffUser);if(!empty($data['password']))$data['password']=Hash::make($data['password']);else unset($data['password']);$data['is_admin']=false;
-        if(($data['role']??'')!=='class_teacher'){$data['assigned_class']=null;$data['assigned_section']=null;}
+        $data=$this->validated($request,$staffUser);$data=$this->normalize($data);if(!empty($data['password']))$data['password']=Hash::make($data['password']);else unset($data['password']);$data['is_admin']=false;
         $staffUser->update($data);return back()->with('success','Staff user updated successfully.');
     }
     public function destroy(Request $request,User $staffUser): RedirectResponse
@@ -37,14 +36,20 @@ class StaffUserController extends Controller
             'name'=>['required','string','max:255'],'email'=>['required','email','max:255',Rule::unique('users','email')->ignore($user?->id)],
             'password'=>[$user?'nullable':'required','string','min:6'],'role'=>['required','in:class_teacher,office_manager,principal'],
             'assigned_class'=>['nullable','string','max:100'],'assigned_section'=>['nullable','string','max:50'],
-            'permissions'=>['nullable','array'],'permissions.*'=>['in:attendance,homework,students,results,report_cards,certificates,fees'],
+            'permissions'=>['nullable','array'],'permissions.*'=>['in:'.implode(',',self::PERMISSIONS)],
         ]);
         if(($data['role']??'')==='class_teacher'){
             if(empty($data['assigned_class']))abort(422,'Assigned Class is required for Class Teacher.');
             $class=SchoolClass::where('is_active',true)->where('name',$data['assigned_class'])->where(function($q)use($data){$q->whereNull('branch_id')->orWhere('branch_id',$data['branch_id']);})->first();
             abort_unless($class,422,'Selected class is not available for the selected campus.');
-            if(!empty($data['assigned_section'])&&!in_array($data['assigned_section'],$class->section_list,true))abort(422,'Selected section is not available for the selected class.');
+            if(!empty($data['assigned_section'])&&!in_array($data['assigned_section'],$class->section_list??[],true))abort(422,'Selected section is not available for the selected class.');
         }
+        return $data;
+    }
+    private function normalize(array $data):array
+    {
+        $data['permissions']=array_values(array_unique(array_intersect(self::PERMISSIONS,$data['permissions']??[])));
+        if(($data['role']??'')!=='class_teacher'){$data['assigned_class']=null;$data['assigned_section']=null;}
         return $data;
     }
 }
