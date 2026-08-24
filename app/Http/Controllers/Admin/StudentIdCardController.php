@@ -53,6 +53,8 @@ class StudentIdCardController extends Controller
         }
 
         $query = Student::with(['user', 'branch'])->where('is_active', true)
+            ->whereNotNull('branch_id')
+            ->whereHas('branch', fn ($q) => $q->where('is_active', true))
             ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
             ->when($className !== '', fn ($q) => $q->where('class_name', $className))
             ->when($section !== '', fn ($q) => $q->where('section', $section));
@@ -77,11 +79,11 @@ class StudentIdCardController extends Controller
         abort_unless($request->user()->is_admin, 403);
 
         $data = $request->validate([
-            'students' => ['required', 'array', 'size:2'],
+            'students' => ['required', 'array', 'min:1', 'max:100'],
             'students.*' => ['required', 'integer', 'distinct', 'exists:students,id'],
         ]);
 
-        $selectedIds = $data['students'];
+        $selectedIds = array_values($data['students']);
         $found = Student::with(['user', 'branch'])
             ->where('is_active', true)
             ->whereNotNull('branch_id')
@@ -90,7 +92,7 @@ class StudentIdCardController extends Controller
             ->get()
             ->keyBy('id');
 
-        abort_unless($found->count() === 2, 422, 'Please select exactly two active students assigned to an active campus.');
+        abort_unless($found->count() === count($selectedIds), 422, 'One or more selected students are inactive or are not assigned to an active campus.');
 
         $students = collect($selectedIds)->map(fn ($id) => $found->get($id));
         $settings = SchoolSetting::first();
