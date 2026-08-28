@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /student/
+Disallow: /storage/private/
+
+Sitemap: https://cnet.mciedu.in/sitemap.xml
