@@ -5,6 +5,10 @@
 
     RewriteEngine On
 
+    # Canonical host: redirect www to non-www HTTPS
+    RewriteCond %{HTTP_HOST} ^www\.cnet\.mciedu\.in$ [NC]
+    RewriteRule ^ https://cnet.mciedu.in%{REQUEST_URI} [L,R=301]
+
     # Force HTTPS
     RewriteCond %{HTTPS} !=on
     RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]
