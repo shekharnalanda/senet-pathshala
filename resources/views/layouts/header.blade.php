@@ -11,6 +11,26 @@
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="@yield('og_title', $websiteSettings?->school_name ?: 'C-Net Pathshala')">
 <meta name="twitter:description" content="@yield('og_description', ($websiteSettings?->school_name ?: 'C-Net Pathshala') . ' - Quality education in Bihar Sharif, Nalanda.')">
-<meta name="twitter:image" content="@yield('og_image', asset('images/logo.png'))"><link rel="icon" href="{{ asset('images/favicon.png') }}"><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet"><link rel="stylesheet" href="{{ asset('css/style.css') }}"><style>.cnet-ai-section{display:none!important}</style></head><body>
+<meta name="twitter:image" content="@yield('og_image', asset('images/logo.png'))"><link rel="icon" href="{{ asset('images/favicon.png') }}"><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet"><link rel="stylesheet" href="{{ asset('css/style.css') }}"><style>.cnet-ai-section{display:none!important}</style>@verbatim
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "School",
+  "name": "C-Net Pathshala",
+  "url": "https://cnet.mciedu.in/",
+  "logo": "https://cnet.mciedu.in/images/logo.png",
+  "description": "C-Net Pathshala offers joyful, caring and quality education for children in Bihar Sharif, Nalanda.",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Bihar Sharif",
+    "addressRegion": "Bihar",
+    "postalCode": "803101",
+    "addressCountry": "IN"
+  }
+}
+</script>
+@endverbatim
+
+</head><body>
 <div class="top-bar"><div class="container d-flex flex-wrap justify-content-between gap-2"><span><i class="fa-solid fa-phone me-1"></i>{{ $websiteSettings?->phone ?: '7004773247' }}</span><span><i class="fa-solid fa-envelope me-1"></i>{{ $websiteSettings?->email ?: 'cnetbiharsharif@gmail.com' }}</span><span>{{ $websiteSettings?->admission_text ?: 'Admission Open '.($websiteSettings?->academic_session ?: '2026-27') }}</span></div></div>
 <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top"><div class="container"><a class="navbar-brand d-flex align-items-center gap-2" href="{{ url('/') }}"><img src="{{ asset('images/logo.png') }}" width="54" height="54" alt="School logo"><span class="fw-bold">{{ $websiteSettings?->school_name ?: 'C-Net Pathshala' }}</span></a><button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"><span class="navbar-toggler-icon"></span></button><div class="collapse navbar-collapse" id="mainNav"><ul class="navbar-nav ms-auto align-items-lg-center"><li class="nav-item"><a class="nav-link" href="{{ url('/') }}">Home</a></li><li class="nav-item"><a class="nav-link" href="{{ url('/about') }}">About</a></li><li class="nav-item"><a class="nav-link" href="{{ url('/admission') }}">Admission</a></li><li class="nav-item"><a class="nav-link" href="{{ url('/gallery') }}">Gallery</a></li><li class="nav-item"><a class="nav-link" href="{{ url('/contact') }}">Contact</a></li><li class="nav-item ms-lg-3"><a class="btn btn-primary rounded-pill px-3" href="{{ route('student.login') }}">Student Login</a></li><li class="nav-item ms-lg-2"><a class="btn btn-outline-secondary rounded-pill px-3" href="{{ route('admin.login') }}">Admin</a></li></ul></div></div></nav><main>
