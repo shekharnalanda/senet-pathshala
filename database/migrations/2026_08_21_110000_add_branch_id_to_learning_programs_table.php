@@ -8,13 +8,26 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (! Schema::hasTable('learning_programs')
+            || Schema::hasColumn('learning_programs', 'branch_id')) {
+            return;
+        }
+
         Schema::table('learning_programs', function (Blueprint $table) {
-            $table->foreignId('branch_id')->nullable()->after('id')->constrained('branches')->nullOnDelete();
+            $table->foreignId('branch_id')
+                ->nullable()
+                ->constrained('branches')
+                ->nullOnDelete();
         });
     }
 
     public function down(): void
     {
+        if (! Schema::hasTable('learning_programs')
+            || ! Schema::hasColumn('learning_programs', 'branch_id')) {
+            return;
+        }
+
         Schema::table('learning_programs', function (Blueprint $table) {
             $table->dropConstrainedForeignId('branch_id');
         });
