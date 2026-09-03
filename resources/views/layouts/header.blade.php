@@ -11,7 +11,7 @@
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="@yield('og_title', $websiteSettings?->school_name ?: 'C-Net Pathshala')">
 <meta name="twitter:description" content="@yield('og_description', ($websiteSettings?->school_name ?: 'C-Net Pathshala') . ' - Quality education in Bihar Sharif, Nalanda.')">
-<meta name="twitter:image" content="@yield('og_image', asset('images/logo.png'))"><link rel="icon" href="{{ asset('images/favicon.png') }}"><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet"><link rel="stylesheet" href="{{ asset('css/style.css') }}"><style>.cnet-ai-section{display:none!important}</style>@verbatim
+<meta name="twitter:image" content="@yield('og_image', asset('images/logo.png'))"><link rel="icon" href="{{ asset('images/favicon.png') }}"><link rel="manifest" href="{{ asset('manifest.webmanifest') }}"><meta name="theme-color" content="#0d6efd"><link rel="apple-touch-icon" href="{{ asset('images/logo.png') }}"><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet"><link rel="stylesheet" href="{{ asset('css/style.css') }}"><style>.cnet-ai-section{display:none!important}</style>@verbatim
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
