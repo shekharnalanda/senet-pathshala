@@ -1,6 +1,6 @@
 @include('layouts.header')
 
-@if(isset($branches) && $branches->count())
+@if(!request()->routeIs('home') && isset($branches) && $branches->count())
 <div class="bg-light border-bottom">
     <div class="container py-2">
         <form method="GET" action="{{ route('home') }}" class="d-flex flex-wrap align-items-center justify-content-center gap-2">
