@@ -67,6 +67,27 @@ class ContactController extends Controller
             }
         }
 
+        try {
+            $school = SchoolSetting::first();
+            $schoolName = $school?->school_name ?: 'C-Net Pathshala';
+            $officialEmail = config('mail.from.address', 'cnetbiharsharif@gmail.com');
+            $adminBody =
+                "NEW WEBSITE ENQUIRY\n\n".
+                "Name: ".$contact->name."\n".
+                "Campus: ".($branch?->name ?: '—')."\n".
+                "Mobile: ".$contact->mobile."\n".
+                "Email: ".($contact->email ?: '—')."\n".
+                "Message: ".($contact->message ?: '—')."\n\n".
+                "Please review this enquiry in the ".$schoolName." Admin Panel.";
+
+            Mail::raw($adminBody, function ($message) use ($officialEmail, $contact) {
+                $message->to($officialEmail)
+                    ->subject('New Enquiry - '.$contact->name);
+            });
+        } catch (\Throwable $e) {
+            Log::warning('Enquiry school notification failed: '.$e->getMessage());
+        }
+
         return back()->with('success', 'Thank you. Your enquiry has been submitted successfully.');
     }
 }
