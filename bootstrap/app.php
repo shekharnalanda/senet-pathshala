@@ -13,6 +13,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->validateCsrfTokens(except: ['mci-pay/callback']);
+
         $middleware->alias([
             'admin' => AdminMiddleware::class,
         ]);

@@ -10,7 +10,7 @@ class FeePayment extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['student_id','total_fee','amount_paid','payment_date','payment_mode','receipt_no','note'];
+    protected $fillable = ['mci_pay_order_id','transaction_ref','fee_month','student_id','total_fee','amount_paid','payment_date','payment_mode','receipt_no','note'];
 
     protected $casts = [
         'payment_date' => 'date',

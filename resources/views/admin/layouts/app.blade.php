@@ -71,6 +71,7 @@
                     </a>
                 @endif
                 @if($u->hasPermission('fees'))
+@if(config('mci_pay.enabled'))<a class="admin-nav-link nav-link" href="{{ route('mci-pay.admin') }}">UPI / UTR Payments</a><a class="admin-nav-link nav-link" href="{{ route('mci-pay.invoices') }}">Online Fee Bills</a>@endif
                     <a class="admin-nav-link nav-link {{ request()->routeIs('admin.fees.*') ? 'active' : '' }}" href="{{ route('admin.fees.index') }}">
                         <i class="fa-solid fa-indian-rupee-sign"></i><span class="nav-text">Fees</span>
                     </a>
