@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Branch;
 use App\Models\Contact;
 use App\Models\SchoolSetting;
-use App\Services\CentralSyncService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -14,7 +13,7 @@ use Illuminate\Validation\ValidationException;
 
 class ContactController extends Controller
 {
-    public function store(Request $request, CentralSyncService $centralSync): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
             'branch_id' => ['nullable', 'exists:branches,id'],
@@ -36,23 +35,6 @@ class ContactController extends Controller
         }
 
         $contact = Contact::create($data);
-
-        $centralSync->enquiry([
-            'business_code' => config('services.mci_central.business_code'),
-            'source_reference_id' => 'pathshala-enquiry-'.$contact->id,
-            'source_site' => config('app.url', 'https://cnet.mciedu.in'),
-            'name' => $contact->name,
-            'phone' => $contact->mobile,
-            'email' => $contact->email,
-            'subject' => 'C-Net Pathshala Enquiry',
-            'message' => $contact->message ?: 'General enquiry',
-            'category' => 'general',
-            'course_service' => $branch?->name,
-            'metadata' => [
-                'branch_id' => $branch?->id,
-                'branch_name' => $branch?->name,
-            ],
-        ]);
 
         if (!empty($data['email'])) {
             try {
