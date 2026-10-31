@@ -19,7 +19,7 @@ class ContactController extends Controller
             'branch_id' => ['nullable', 'exists:branches,id'],
             'name' => ['required', 'string', 'max:255'],
             'mobile' => ['required', 'string', 'max:20'],
-            'email' => ['required', 'email, 'max:255'],
+            'email' => ['required', 'email', 'max:255'],
             'message' => ['nullable', 'string', 'max:5000'],
         ]);
 
