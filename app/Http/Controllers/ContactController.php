@@ -19,7 +19,7 @@ class ContactController extends Controller
             'branch_id' => ['nullable', 'exists:branches,id'],
             'name' => ['required', 'string', 'max:255'],
             'mobile' => ['required', 'string', 'max:20'],
-            'email' => ['nullable', 'email', 'max:255'],
+            'email' => ['required', 'email, 'max:255'],
             'message' => ['nullable', 'string', 'max:5000'],
         ]);
 
@@ -34,7 +34,15 @@ class ContactController extends Controller
             $data['branch_id'] = $branch?->id;
         }
 
-        $contact = Contact::create($data);
+        
+        $verified = $request->session()->get('enquiry_email_verified');
+        $email = strtolower(trim((string) ($data['email'] ?? '')));
+        if (!$verified || !hash_equals((string) ($verified['email'] ?? ''), $email) || now()->timestamp > (int) ($verified['expires_at'] ?? 0)) {
+            return back()->withInput()->withErrors(['email' => 'पहले इस email पर भेजा गया OTP verify करें।']);
+        }
+        $request->session()->forget('enquiry_email_verified');
+
+$contact = Contact::create($data);
 
         if (!empty($data['email'])) {
             try {
