@@ -60,7 +60,7 @@ $contact = Contact::create($data);
         try {
             $school = SchoolSetting::first();
             $schoolName = $school?->school_name ?: 'C-Net Pathshala';
-            $officialEmail = config('mail.from.address', 'cnetbiharsharif@gmail.com');
+            $officialEmail = config('enquiry.recipient');
             $adminBody =
                 "NEW WEBSITE ENQUIRY\n\n".
                 "Name: ".$contact->name."\n".
